@@ -11,6 +11,21 @@
                                                    cljs-level-raw]])))
 
 
+;;;;;;;;;; Miscellaneous
+
+
+#?(:clj 
+   
+(defn cljs-compiler
+
+  ""
+
+  []
+
+  (some-> cljs.env/*compiler*
+          deref)))
+
+
 ;;;;;;;;;; CLJS compilation levels
 
 
@@ -20,10 +35,9 @@
 
   []
 
-  (some-> cljs.env/*compiler*
-          deref
-          (get-in [:options
-                   :optimizations])))
+  (get-in (cljs-compiler)
+          [:options
+           :optimizations]))
 
 
 
@@ -49,8 +63,7 @@
 
   []
 
-  (some? (cljs-level-raw)))
-
+  (some? (cljs-compiler)))
 
 
 
@@ -60,4 +73,4 @@
 
   []
 
-  (nil? (cljs-level-raw)))
+  (nil? (cljs-compiler)))
