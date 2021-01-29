@@ -2,4 +2,4 @@
 rm -rf chui/js/*
 command="$1"
 shift
-clj -A:test:cljs "$command" test "$@"
+clj -M:test:cljs "$command" test "$@"

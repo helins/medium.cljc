@@ -5,7 +5,7 @@
   <artifactId>medium</artifactId>
   <version>0.0.0-alpha0</version>
   <name>Medium</name>
-  <description>Macro utilities for extending the CLJS compiler</description>
+  <description>Utilities for targeting different compilation environments in Clojure/script</description>
   <url>https://github.com/helins-io/medium.cljc</url>
   <licenses>
     <license>
