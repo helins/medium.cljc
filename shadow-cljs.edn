@@ -1,0 +1,27 @@
+{:builds
+ {:dev
+  {:asset-path       "/js"
+   :compiler-options {:infer-externs :auto}
+   :devtools         {:after-load helins.medium.dev/on-load
+                      :preloads   [shadow.remote.runtime.cljs.browser]}
+   :modules          {:main {:entries [helins.fcss.dev]
+                             :init-fn helins.medium.dev/on-load
+                             }}
+   :output-dir       "resources/public/js"
+   :target           :browser}
+
+
+  :test
+  {:target    :browser-test
+   :runner-ns lambdaisland.chui.shadow.browser-runner
+   :test-dir  "resources/chui"}}
+
+ :deps
+ {:alias [:cljs]}
+ 
+ :dev-http
+ {8000 "resources/public"}
+ 
+ :nrepl
+ {:port 4000}
+ }

@@ -1,0 +1,4 @@
+#kaocha/v1
+{:tests [{:id                  :jvm
+          :kaocha/source-paths ["src/main"]
+          :kaocha/test-paths   ["src/test"]}]}

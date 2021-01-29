@@ -1,0 +1,34 @@
+{:deps
+ {clj-commons/fs              {:mvn/version "1.6.307"}
+  org.clojure/clojure         {:mvn/version "1.10.1"}
+  org.clojure/clojurescript   {:mvn/version "1.10.764"}
+  org.clojure/tools.namespace {:mvn/version "1.1.0"}}
+
+ :paths
+ ["src/main"]
+
+ :aliases
+ {:cljs
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.9.10"}}
+   :main-opts  ["-m" "shadow.cljs.devtools.cli"]}
+
+  :deploy
+  {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
+   :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy" "main.jar"]}
+
+  :dev
+  {:extra-deps  {criterium/criterium {:mvn/version "0.4.5"}}
+   :extra-paths ["src/dev"]}
+
+  :jar
+  {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
+   :main-opts ["-m" "hf.depstar.jar" "main.jar"]}
+
+  :install
+  {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
+   :main-opts ["-m" "deps-deploy.deps-deploy" "install" "main.jar"]}
+
+  :test
+  {:extra-deps  {lambdaisland/chui   {:mvn/version "0.0.117"}
+                 lambdaisland/kaocha {:mvn/version "1.0-612"}}
+   :extra-paths ["src/test"]}}}
