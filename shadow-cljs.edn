@@ -4,9 +4,8 @@
    :compiler-options {:infer-externs :auto}
    :devtools         {:after-load helins.medium.dev/on-load
                       :preloads   [shadow.remote.runtime.cljs.browser]}
-   :modules          {:main {:entries [helins.fcss.dev]
-                             :init-fn helins.medium.dev/on-load
-                             }}
+   :modules          {:main {:entries [helins.medium.dev]
+                             :init-fn helins.medium.dev/on-load}}
    :output-dir       "resources/public/js"
    :target           :browser}
 

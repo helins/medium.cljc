@@ -18,3 +18,16 @@
   []
 
   )
+
+
+
+(println :REF-1 medium/*refresh-clojure?*)
+
+(medium/refresh-clojure)
+
+(println :REF-2 medium/*refresh-clojure?*)
+
+(comment
+  
+
+  )
