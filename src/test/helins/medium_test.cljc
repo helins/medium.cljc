@@ -5,63 +5,78 @@
   {:author "Adam Helinski"}
 
   (:require [clojure.test  :as t]
-            [helins.medium :as medium]))
+            [helins.medium :as medium])
+  #?(:cljs (:require-macros [helins.medium-test :refer [force-clojure]])))
 
 
 ;;;;;;;;;;
 
 
-(t/deftest base-cljs?
+(defmacro force-clojure
 
-  (t/is (= #?(:clj  false
-              :cljs true)
-           (medium/base-cljs?))))
+  ""
 
+  []
 
-
-(t/deftest base-clojure?
-
-  (t/is (= #?(:clj  true
-              :cljs false)
-           (medium/base-clojure?))))
+  [(medium/target)
+   (binding [medium/*force-clojure?* true]
+     (medium/target))])
 
 
 ;;;;;;;;;;
 
 
-(t/deftest cljs-level
+#?(:clj
 
-  (let [x (medium/cljs-level)]
+(t/deftest cljs-compiler
+
+  (t/is (nil? (medium/cljs-compiler))
+        "When compiling true Clojure, the CLJS compiler is nil")))
+
+
+
+(t/deftest cljs-compiler-optimization
+
+  (let [x (medium/cljs-compiler-optimization*)]
     (t/is #?(:clj  (nil? x)
-             :cljs (#{:dev
-                      :release} x)))))
+             :cljs (some? x))
+          "CLJS compiler optimization only exist when compiling CLJS")
+
+    #?(:clj (t/is (= (medium/cljs-compiler-optimization)
+                     x)
+                  "Macro returns the same result as the function"))))
 
 
 
-(t/deftest cljs-level-raw
+(t/deftest target
 
-  (let [x (medium/cljs-level-raw)]
-    (t/is #?(:clj  (nil? x)
-             :cljs (some? x)))))
+  (let [x (medium/target*)]
+    (t/is #?(:clj  (= :clojure
+                      x)
+             :cljs (#{:cljs/dev
+                      :cljs/release} x))
+          "Current target is set accordingly")
+
+    #?(:clj (t/is (= x
+                     (medium/target))
+                  "Macro returns the same result as the function")))
+
+  #?(:cljs (t/is (= [:cljs/dev
+                     :clojure]
+                    (force-clojure))
+                 "From CLJS, compilation can be forced to output Clojure")))
 
 
-;;;;;;;;;;
 
+(t/deftest target-init
 
-(t/deftest compile-cljs?
+  (let [x (medium/target-init*)]
+    (t/is #?(:clj  (= :clojure
+                      x)
+             :cljs (#{:cljs/dev
+                      :cljs/release} x))
+          "Initial target is set accordingly")
 
-  (t/is (= #?(:clj  false
-              :cljs true)
-           (medium/compile-cljs?)
-           #?(:clj (binding [medium/*force-clojure?* false]
-                     (medium/compile-cljs?))))))
-
-
-
-(t/deftest compile-clojure?
-
-  (t/is (= #?(:clj  true
-              :cljs false)
-           (medium/compile-clojure?)
-           #?(:clj (binding [medium/*force-clojure?* false]
-                     (medium/compile-clojure?))))))
+    #?(:clj (t/is (= x
+                     (medium/target-init))
+                  "Macro returns the same result as the function"))))
