@@ -29,6 +29,7 @@ package.json
 package-lock.json
 
 resources/*
+!resources/load.edn
 resources/public/*
 !resources/public/index.html
 resources/chui/*

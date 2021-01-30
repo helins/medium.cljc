@@ -4,9 +4,12 @@
 
   {:author "Adam Helinski"}
 
-  #?(:clj (:require [clojure.tools.namespace.repl]))
+  #?(:clj (:require [clojure.edn]
+                    [clojure.tools.namespace.repl]))
   #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
                                                    expand*
+                                                   load-edn*
+                                                   load-string*
                                                    refresh-clojure*
                                                    target*
                                                    target-init*
@@ -210,3 +213,37 @@
   (eval `(do
            ~@clojure-form+
            nil)))
+
+
+;;;;;;;;;;
+
+
+#?(:clj
+
+(defn load-edn
+
+  ""
+
+  [path]
+
+  (clojure.edn/read-string (slurp path))))
+
+
+
+(defmacro load-edn*
+
+  ""
+
+  [path]
+
+  `(quote ~(load-edn path)))
+
+
+
+(defmacro load-string*
+
+  ""
+
+  [path]
+
+  `(quote ~(slurp path)))

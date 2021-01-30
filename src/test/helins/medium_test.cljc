@@ -102,3 +102,13 @@
 (t/deftest when-compiling*
 
   (t/is (medium/expand* @*a)))
+
+
+;;;;;;;;;;
+
+
+(t/deftest load-edn*
+
+
+  (t/is (= {:a ['b "c" #{4}]}
+           (medium/load-edn* "./resources/load.edn"))))
