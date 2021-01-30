@@ -5,14 +5,18 @@
   {:author "Adam Helinski"}
 
   #?(:clj (:require [clojure.edn]
-                    [clojure.tools.namespace.repl]))
+                    [clojure.string]
+                    [clojure.tools.namespace.repl]
+                    [me.raynes.fs                  :as fs]))
   #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
                                                    expand*
                                                    load-edn*
                                                    load-string*
+                                                   refresh-cljs*
                                                    refresh-clojure*
                                                    target*
                                                    target-init*
+                                                   touch-recur*
                                                    when-compiling*]])))
 
 
@@ -154,7 +158,139 @@
      :clojure))
 
 
-;;;;;;;;;; Refreshing Clojure files from CLJS
+;;;;;;;;;; File extensions
+
+
+(defn file-cljc?
+
+  ""
+
+  [filename]
+
+  (clojure.string/ends-with? filename
+                             ".cljc"))
+
+
+
+(defn file-cljs?
+
+  ""
+
+  [filename]
+
+  (or (file-cljc? filename)
+      (clojure.string/ends-with? filename
+                                 ".cljs")))
+
+
+
+(defn file-clojure?
+
+  ""
+
+  [filename]
+
+  (or (file-cljc? filename)
+      (clojure.string/ends-with? filename
+                                 ".clj")))
+
+
+;;;;;;;;;; Refreshing CLJS files
+
+
+#?(:clj
+
+(defn touch-recur
+
+  ""
+
+  ([path]
+
+   (touch-recur path
+                nil))
+
+
+  ([path pred]
+
+   (let [touch (if pred
+                 #(when (pred %)
+                    (fs/touch %)
+                    %)
+                 #(do
+                    (fs/touch %)
+                    %))]
+     (if (fs/directory? path)
+       (into []
+             (comp (mapcat (fn [[root _dir+ file+]]
+                             (map #(touch (str root
+                                               "/"
+                                               %))
+                                  file+)))
+                   (filter some?))
+             (fs/iterate-dir path))
+       (when (touch path)
+         [path]))))))
+
+
+
+(defmacro touch-recur*
+
+  ""
+
+  ([path]
+
+   `(touch-recur* ~path
+                  nil))
+
+
+  ([path pred]
+
+   (when (#{:cljs/dev
+            :clojure} (target &env))
+     `(quote ~(touch-recur path
+                           (some-> pred
+                                   eval))))))
+
+
+;;;;;
+
+
+#?(:clj
+
+(defn refresh-cljs
+
+  ""
+
+  ([]
+
+   (refresh-cljs))
+
+
+  ([path]
+
+   (touch-recur (or path
+                    "src")
+                file-cljs?))))
+
+
+
+(defmacro refresh-cljs*
+
+  ""
+
+  ([]
+
+   `(refresh-cljs* nil))
+
+
+  ([path]
+
+   (when (#{:cljs/dev
+            :clojure} (target &env))
+     (refresh-cljs path))))
+
+
+;;;;;;;;;; Refreshing Clojure files
 
 
 #?(:clj
