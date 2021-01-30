@@ -229,7 +229,16 @@
                    (filter some?))
              (fs/iterate-dir path))
        (when (touch path)
-         [path]))))))
+         [path]))))
+
+
+  ([target path pred]
+
+   (when (#{:cljs/dev
+            :clojure} target)
+     (touch-recur path
+                  pred)))))
+             
 
 
 
@@ -245,11 +254,9 @@
 
   ([path pred]
 
-   (when (#{:cljs/dev
-            :clojure} (target &env))
-     `(quote ~(touch-recur path
-                           (some-> pred
-                                   eval))))))
+   (touch-recur (target &env)
+                path
+                pred)))
 
 
 ;;;;;
@@ -270,7 +277,14 @@
 
    (touch-recur (or path
                     "src")
-                file-cljs?))))
+                file-cljs?))
+
+
+  ([target path]
+
+   (when (#{:cljs/dev
+            :clojure} target)
+     (refresh-cljs path)))))
 
 
 
@@ -285,9 +299,8 @@
 
   ([path]
 
-   (when (#{:cljs/dev
-            :clojure} (target &env))
-     (refresh-cljs path))))
+   (refresh-cljs (target &env)
+                 path)))
 
 
 ;;;;;;;;;; Refreshing Clojure files
