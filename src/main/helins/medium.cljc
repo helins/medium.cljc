@@ -7,6 +7,7 @@
   #?(:clj (:require [clojure.edn]
                     [clojure.string]
                     [clojure.tools.namespace.repl]
+                    [clojure.walk]
                     [me.raynes.fs                  :as fs]))
   #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
                                                    expand*
@@ -339,6 +340,25 @@
 ;;;;;;;;;; Anonymous macros
 
 
+#?(:clj
+
+
+(defn- -prepare-form+
+
+  ;;
+
+  [env form+]
+
+  `(do ~@(clojure.walk/postwalk #(if (symbol? %)
+                                   (case (name %)
+                                     "&target"      (target env)
+                                     "&target-init" (target-init)
+                                     %)
+                                   %)
+                                form+))))
+
+
+
 (defmacro expand*
 
   ""
@@ -347,7 +367,8 @@
 
   (when (cljs? (target &env))
     (refresh-clojure))
-  (eval `(do ~@clojure-form+)))
+  (eval (-prepare-form+ &env
+                        clojure-form+)))
 
 
 
@@ -359,9 +380,9 @@
 
   (when (cljs? (target &env))
     (refresh-clojure))
-  (eval `(do
-           ~@clojure-form+
-           nil)))
+  (eval (concat (-prepare-form+ &env
+                                clojure-form+)
+                [nil])))
 
 
 ;;;;;;;;;;
