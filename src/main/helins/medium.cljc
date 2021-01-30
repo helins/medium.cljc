@@ -7,7 +7,7 @@
   #?(:clj (:require [cljs.env]
                     [clojure.tools.namespace.repl]))
   #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
-                                                   ;expand*
+                                                   expand*
                                                    refresh-clojure*
                                                    target*
                                                    target-init*]])))
@@ -17,16 +17,6 @@
 
 
 ;;;;;;;;;; Flags
-
-
-#?(:clj
-
-(def ^:dynamic *force-clojure?*
-
-  ""
-
-  false))
-
 
 
 #?(:clj
@@ -111,11 +101,11 @@
 
   ""
 
-  []
+  [env]
 
-  (if *force-clojure?*
-    :clojure
-    (target-init))))
+  (if (:ns env)
+    (target-init)
+    :clojure)))
 
 
 
@@ -125,7 +115,9 @@
 
   []
 
-  (target))
+  (if (:ns &env)
+    (target-init)
+    :clojure))
 
 
 ;;;;;
@@ -167,8 +159,7 @@
   []
 
   (when *refresh-clojure?*
-    (binding [*force-clojure?*   true
-              *refresh-clojure?* false
+    (binding [*refresh-clojure?* false
               clojure.core/*e    nil]
       (clojure.tools.namespace.repl/refresh)
       (some-> clojure.core/*e
@@ -183,14 +174,5 @@
 
   []
 
-  (refresh-clojure))
-
-
-;;;;;;;;;; Anonymous macros
-
-
-;(defmacro expand*
-;
-;  ""
-
-
+  (when (cljs? (target &env))
+    (refresh-clojure)))

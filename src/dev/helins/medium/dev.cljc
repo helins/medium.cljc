@@ -4,7 +4,8 @@
 
   {:author "Adam Helinski"}
 
-  (:require [helins.medium :as medium]))
+  (:require [helins.medium :as medium]
+            [helins.medium-test]))
 
 
 ;;;;;;;;;;

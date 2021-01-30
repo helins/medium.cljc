@@ -6,22 +6,14 @@
 
   (:require [clojure.test  :as t]
             [helins.medium :as medium])
-  #?(:cljs (:require-macros [helins.medium-test :refer [force-clojure]])))
+  #?(:cljs (:require-macros [helins.medium-test])))  ;; Just in case. In prior commits, this was ultimately throwing.
+
 
 
 ;;;;;;;;;;
 
-
-(defmacro force-clojure
-
-  ""
-
-  []
-
-  [(medium/target)
-   (binding [medium/*force-clojure?* true]
-     (medium/target))])
-
+#?(:clj (println :clojure-test)
+   :cljs (println :cljs-test))
 
 ;;;;;;;;;;
 
@@ -58,13 +50,8 @@
           "Current target is set accordingly")
 
     #?(:clj (t/is (= x
-                     (medium/target))
-                  "Macro returns the same result as the function")))
-
-  #?(:cljs (t/is (= [:cljs/dev
-                     :clojure]
-                    (force-clojure))
-                 "From CLJS, compilation can be forced to output Clojure")))
+                     (medium/target nil))
+                  "Macro returns the same result as the function"))))
 
 
 
