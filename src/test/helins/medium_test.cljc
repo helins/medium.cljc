@@ -67,3 +67,44 @@
     #?(:clj (t/is (= x
                      (medium/target-init))
                   "Macro returns the same result as the function"))))
+
+
+;;;;;;;;;;
+
+
+(def expand-test-value
+     420)
+
+
+
+(medium/expand*
+  (let [x 1]
+
+    `(def expand-test-var
+
+       (+ ~x
+          expand-test-value))))
+
+
+
+(t/deftest expand*
+
+  (t/is (= (+ 1
+              expand-test-value)
+           expand-test-var)
+        "Var was defined during expansion"))
+
+
+
+#?(:clj (def *a (atom false)))
+
+
+(medium/when-compiling*
+  (reset! *a
+          true))
+
+
+
+(t/deftest when-compiling*
+
+  (t/is (medium/expand* @*a)))

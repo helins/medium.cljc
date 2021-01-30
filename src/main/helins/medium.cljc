@@ -176,3 +176,31 @@
 
   (when (cljs? (target &env))
     (refresh-clojure)))
+
+
+;;;;;;;;;; Anonymous macros
+
+
+(defmacro expand*
+
+  ""
+
+  [& clojure-form+]
+
+  (when (cljs? (target &env))
+    (refresh-clojure))
+  (eval `(do ~@clojure-form+)))
+
+
+
+(defmacro when-compiling*
+
+  ""
+
+  [& clojure-form+]
+
+  (when (cljs? (target &env))
+    (refresh-clojure))
+  (eval `(do
+           ~@clojure-form+
+           nil)))
