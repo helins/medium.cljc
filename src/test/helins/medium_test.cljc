@@ -66,6 +66,17 @@
 ;;;;;;;;;;
 
 
+(t/deftest when-target*
+
+  (t/is (medium/when-target* #?(:clj  :clojure
+                                :cljs #{:cljs/dev
+                                        :cljs/release})
+          true)))
+
+
+;;;;;;;;;;
+
+
 (def expand-test-value
      420)
 

@@ -18,7 +18,8 @@
                                                    target*
                                                    target-init*
                                                    touch-recur*
-                                                   when-compiling*]])))
+                                                   when-compiling*
+                                                   when-target*]])))
 
 
 #?(:clj (clojure.tools.namespace.repl/disable-reload!))
@@ -157,6 +158,25 @@
 
   (= target
      :clojure))
+
+
+;;;;;;;;;; Macros simplify output code depending on target
+
+
+(defmacro when-target*
+
+  ""
+
+  [target & form+]
+
+  (let [target-test (helins.medium/target &env)]
+    (when (if (coll? target)
+            (some #(identical? %
+                               target-test)
+                  target)
+            (identical? target
+                        target-test))
+      `(do ~@form+))))
 
 
 ;;;;;;;;;; File extensions
