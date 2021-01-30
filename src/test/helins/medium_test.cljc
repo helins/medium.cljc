@@ -9,12 +9,6 @@
   #?(:cljs (:require-macros [helins.medium-test])))  ;; Just in case. In prior commits, this was ultimately throwing.
 
 
-
-;;;;;;;;;;
-
-#?(:clj (println :clojure-test)
-   :cljs (println :cljs-test))
-
 ;;;;;;;;;;
 
 

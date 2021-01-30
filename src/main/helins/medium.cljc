@@ -4,13 +4,13 @@
 
   {:author "Adam Helinski"}
 
-  #?(:clj (:require [cljs.env]
-                    [clojure.tools.namespace.repl]))
+  #?(:clj (:require [clojure.tools.namespace.repl]))
   #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
                                                    expand*
                                                    refresh-clojure*
                                                    target*
-                                                   target-init*]])))
+                                                   target-init*
+                                                   when-compiling*]])))
 
 
 #?(:clj (clojure.tools.namespace.repl/disable-reload!))
@@ -30,17 +30,23 @@
 
 ;;;;;;;;;; Extracting information from the Clojurescript compiler
 
-   
+
 #?(:clj
 
-(defn cljs-compiler
+
+(def ^{:arglist '([])}
+     cljs-compiler
 
   ""
 
-  []
-
-  (some-> cljs.env/*compiler*
-          deref)))
+  (if-some [var-cljs-compiler (try
+                                (requiring-resolve 'cljs.env/*compiler*)
+                                (catch Throwable _e
+                                  nil))]
+    (fn []
+      (some-> @var-cljs-compiler
+              deref))
+    (fn [] nil))))
 
 
 
