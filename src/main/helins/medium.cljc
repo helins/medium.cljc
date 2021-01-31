@@ -163,7 +163,7 @@
 ;;;;;;;;;; Macros simplify output code depending on target
 
 
-#?(:clj (defn not-advanced
+#?(:clj (defn not-cljs-release
 
   ""
 

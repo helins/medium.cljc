@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 
-clojure -M:jar && clojure -A:install && rm main.jar
+clojure -M:jar && clojure -M:install && rm main.jar
