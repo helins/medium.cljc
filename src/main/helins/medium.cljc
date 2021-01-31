@@ -9,7 +9,7 @@
                     [clojure.tools.namespace.repl]
                     [clojure.walk]
                     [me.raynes.fs                  :as fs]))
-  #?(:cljs (:require-macros [helins.medium :refer [cljs-compiler-optimization*
+  #?(:cljs (:require-macros [helins.medium :refer [cljs-optimization*
                                                    expand*
                                                    load-edn*
                                                    load-string*
@@ -61,43 +61,33 @@
 
 #?(:clj
 
-(defn cljs-compiler-optimization
+(def cljs-optimization
+
+  ""
+
+  nil))
+
+
+
+(defmacro cljs-optimization*
 
   ""
 
   []
 
-  (get-in (cljs-compiler)
-          [:options
-           :optimizations])))
-
-
-
-(defmacro cljs-compiler-optimization*
-
-  ""
-
-  []
-
-  (cljs-compiler-optimization))
+  cljs-optimization)
 
 
 ;;;;;;;;; Detecting the target (at initialization and currently)
 
 #?(:clj
 
-(defn target-init
+(def target-init
 
   ""
 
-  []
+  :clojure))
 
-  (if-some [level-raw (cljs-compiler-optimization)]
-    (if (identical? level-raw
-                    :advanced)
-      :cljs/release
-      :cljs/dev)
-    :clojure)))
 
 
 (defmacro target-init*
@@ -106,7 +96,7 @@
 
   []
 
-  (target-init))
+  target-init)
 
 
 
@@ -119,7 +109,7 @@
   [env]
 
   (if (:ns env)
-    (target-init)
+    target-init
     :clojure)))
 
 
@@ -130,9 +120,7 @@
 
   []
 
-  (if (:ns &env)
-    (target-init)
-    :clojure))
+  (target &env))
 
 
 ;;;;;
@@ -213,7 +201,7 @@
   [target-request & form+]
 
   (-when-requested-target target-request
-                          (target-init)
+                          target-init
                           form+))
 
 
@@ -443,7 +431,7 @@
                 [nil])))
 
 
-;;;;;;;;;;
+;;;;;;;;;; Loading and expanding content from files
 
 
 #?(:clj
@@ -475,3 +463,23 @@
   [path]
 
   `(quote ~(slurp path)))
+
+
+;;;;;;;;;; <!> Important <!>
+;;;;;;;;;;
+;;;;;;;;;; Detects if initially compiling for CLJS. The trick is executing Clojure code only when this namespace
+;;;;;;;;;; is required as a CLJS file.
+
+
+#?(:cljs (when-compiling*
+
+(let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
+                           [:options
+                            :optimizations])]
+  (alter-var-root #'cljs-optimization
+                  (constantly optimization))
+  (alter-var-root #'target-init
+                  (constantly (if (identical? optimization
+                                              :advanced)
+                                :cljs/release
+                                :cljs/dev))))))
