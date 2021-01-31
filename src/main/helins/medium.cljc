@@ -163,6 +163,21 @@
 ;;;;;;;;;; Macros simplify output code depending on target
 
 
+#?(:clj (defn not-advanced
+
+  ""
+
+  [env form]
+
+  (when (identical? (target env)
+                    :cljs/release)
+    (throw (ex-info (str "Call forbidden in CLJS advanced build: "
+                         form)
+                    {:medium/forbidden (symbol (resolve (first form)))
+                     :medium/form      form})))))
+
+
+
 (defmacro when-target*
 
   ""
