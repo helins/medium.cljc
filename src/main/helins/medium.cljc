@@ -178,20 +178,43 @@
 
 
 
+(defn- -when-requested-target
+
+  ""
+
+  [target-request target form+]
+
+  (when (if (coll? target-request)
+          (some #(identical? %
+                             target)
+                target-request)
+          (identical? target
+                      target-request))
+    `(do ~@form+)))
+
+
+
 (defmacro when-target*
 
   ""
 
-  [target & form+]
+  [target-request & form+]
 
-  (let [target-test (helins.medium/target &env)]
-    (when (if (coll? target)
-            (some #(identical? %
-                               target-test)
-                  target)
-            (identical? target
-                        target-test))
-      `(do ~@form+))))
+  (-when-requested-target target-request
+                          (target &env)
+                          form+))
+
+
+
+(defmacro when-target-init*
+
+  ""
+
+  [target-request & form+]
+
+  (-when-requested-target target-request
+                          (target-init)
+                          form+))
 
 
 ;;;;;;;;;; File extensions

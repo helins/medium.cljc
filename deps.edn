@@ -13,7 +13,7 @@
 
   :deploy
   {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
-   :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy" "main.jar"]}
+   :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy" "release.jar"]}
 
   :dev
   {:extra-deps  {criterium/criterium {:mvn/version "0.4.5"}}
@@ -21,11 +21,11 @@
 
   :jar
   {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
-   :main-opts ["-m" "hf.depstar.jar" "main.jar"]}
+   :main-opts ["-m" "hf.depstar.jar" "release.jar"]}
 
   :install
   {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
-   :main-opts ["-m" "deps-deploy.deps-deploy" "install" "main.jar"]}
+   :main-opts ["-m" "deps-deploy.deps-deploy" "install" "release.jar"]}
 
   :test
   {:extra-deps  {lambdaisland/chui   {:mvn/version "0.0.117"}
