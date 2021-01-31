@@ -28,9 +28,7 @@
 ;;;;;;;;;; Flags
 
 
-#?(:clj
-
-(def ^:dynamic *refresh-clojure?*
+#?(:clj (def ^:dynamic *refresh-clojure?*
 
   ""
 
@@ -40,28 +38,7 @@
 ;;;;;;;;;; Extracting information from the Clojurescript compiler
 
 
-#?(:clj
-
-
-(def ^{:arglist '([])}
-     cljs-compiler
-
-  ""
-
-  (if-some [var-cljs-compiler (try
-                                (requiring-resolve 'cljs.env/*compiler*)
-                                (catch Throwable _e
-                                  nil))]
-    (fn []
-      (some-> @var-cljs-compiler
-              deref))
-    (fn [] nil))))
-
-
-
-#?(:clj
-
-(def cljs-optimization
+#?(:clj (def cljs-optimization
 
   ""
 
@@ -80,9 +57,7 @@
 
 ;;;;;;;;; Detecting the target (at initialization and currently)
 
-#?(:clj
-
-(def target-init
+#?(:clj (def target-init
 
   ""
 
@@ -100,9 +75,7 @@
 
 
 
-#?(:clj
-
-(defn target
+#?(:clj (defn target
 
   ""
 
@@ -245,9 +218,7 @@
 ;;;;;;;;;; Refreshing CLJS files
 
 
-#?(:clj
-
-(defn touch-recur
+#?(:clj (defn touch-recur
 
   ""
 
@@ -309,9 +280,7 @@
 ;;;;;
 
 
-#?(:clj
-
-(defn refresh-cljs
+#?(:clj (defn refresh-cljs
 
   ""
 
@@ -353,9 +322,7 @@
 ;;;;;;;;;; Refreshing Clojure files
 
 
-#?(:clj
-
-(defn refresh-clojure
+#?(:clj (defn refresh-clojure
 
   ""
 
@@ -386,10 +353,7 @@
 ;;;;;;;;;; Anonymous macros
 
 
-#?(:clj
-
-
-(defn- -prepare-form+
+#?(:clj (defn- -prepare-form+
 
   ;;
 
@@ -434,9 +398,7 @@
 ;;;;;;;;;; Loading and expanding content from files
 
 
-#?(:clj
-
-(defn load-edn
+#?(:clj (defn load-edn
 
   ""
 

@@ -12,23 +12,14 @@
 ;;;;;;;;;;
 
 
-#?(:clj
+(t/deftest cljs-optimization
 
-(t/deftest cljs-compiler
-
-  (t/is (nil? (medium/cljs-compiler))
-        "When compiling true Clojure, the CLJS compiler is nil")))
-
-
-
-(t/deftest cljs-compiler-optimization
-
-  (let [x (medium/cljs-compiler-optimization*)]
+  (let [x (medium/cljs-optimization*)]
     (t/is #?(:clj  (nil? x)
              :cljs (some? x))
           "CLJS compiler optimization only exist when compiling CLJS")
 
-    #?(:clj (t/is (= (medium/cljs-compiler-optimization)
+    #?(:clj (t/is (= medium/cljs-optimization
                      x)
                   "Macro returns the same result as the function"))))
 
@@ -59,7 +50,7 @@
           "Initial target is set accordingly")
 
     #?(:clj (t/is (= x
-                     (medium/target-init))
+                     medium/target-init)
                   "Macro returns the same result as the function"))))
 
 
