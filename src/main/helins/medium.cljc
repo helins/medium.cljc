@@ -10,26 +10,16 @@
                     [me.raynes.fs    :as fs]))
   #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
                                                    cljs-optimization*
+                                                   co-load*
                                                    expand*
                                                    load-edn*
                                                    load-string*
-                                                   refresh-cljs*
-                                                   refresh-clojure*
+                                                   next-reload-cycle*
                                                    target*
                                                    target-init*
                                                    touch-recur*
                                                    when-compiling*
                                                    when-target*]])))
-
-
-;;;;;;;;;; Flags
-
-
-#?(:clj (def ^:private -*required-nses
-
-  ;;
-
-  (atom #{})))
 
 
 ;;;;;;;;;; Extracting information from the Clojurescript compiler
@@ -53,6 +43,7 @@
 
 
 ;;;;;;;;; Detecting the target (at initialization and currently)
+
 
 #?(:clj (def target-init
 
@@ -274,109 +265,76 @@
                 pred)))
 
 
-;;;;;
-
-
-#?(:clj (defn refresh-cljs
-
-  ""
-
-  ([]
-
-   (refresh-cljs))
-
-
-  ([path]
-
-   (touch-recur (or path
-                    "src")
-                file-cljs?))
-
-
-  ([target path]
-
-   (when (#{:cljs/dev
-            :clojure} target)
-     (refresh-cljs path)))))
-
-
-
-(defmacro refresh-cljs*
-
-  ""
-
-  ([]
-
-   `(refresh-cljs* nil))
-
-
-  ([path]
-
-   (refresh-cljs (target &env)
-                 path)))
-
-
 ;;;;;;;;;; Refreshing Clojure files
 
 
-#?(:clj (defn refresh-clojure
+#?(:clj (def ^:private -*reloaded
+
+  ;;
+
+  (atom #{})))
+
+
+
+#?(:clj (defn co-load
 
   ""
 
-  ([]
+  ([env]
 
-   (refresh-clojure nil))
+   (co-load env
+            nil))
 
 
-  ([nspace]
+  ([env nspace]
 
-   (let [nspace-2        (symbol (str (or nspace
-                                          *ns*)))
-         [required-old
-          _required-new] (swap-vals! -*required-nses
-                                     conj
-                                     nspace-2)]
-     (when-not (contains? required-old
-                          nspace-2)
-       (require nspace-2
-                :reload)))
+   (when-not (identical? (target env)
+                         :clojure)
+     (let [nspace-2 (ns-name (or nspace
+                                 *ns*))]
+       (when-not (-> (swap-vals! -*reloaded
+                                 conj
+                                 nspace-2)
+                     first
+                     (contains? nspace-2))
+         (require nspace-2
+                  :reload))))
    nil)))
 
 
 
-(defmacro refresh-clojure*
+(defmacro co-load*
 
   ""
 
   []
 
-  (not-cljs-release &env
-                    &form)
-  (when (identical? (target &env)
-                    :cljs/dev)
-    (refresh-clojure))
+  (co-load &env)
   nil)
 
 
 
-#?(:clj (defn purge-clojure-tracker
+#?(:clj (defn next-reload-cycle
+
+  ""
+
+  [env]
+
+
+  (when (identical? (target env)
+                    :cljs/dev)
+    (reset! -*reloaded
+            #{}))))
+
+
+
+(defmacro next-reload-cycle*
 
   ""
 
   []
 
-  (reset! -*required-nses
-          #{})))
-
-
-
-(defmacro purge-clojure-tracker*
-
-  ""
-
-  []
-
-  (purge-clojure-tracker)
+  (next-reload-cycle &env)
   nil)
 
 
@@ -412,7 +370,7 @@
                     :clojure)
       `(eval ~form)
       (do
-        (refresh-clojure)
+        (co-load &env)
         (eval form)))))
 
 
@@ -432,7 +390,7 @@
          ~form
          nil)
       (do
-        (refresh-clojure)
+        (co-load &env)
         (eval form)
         nil))))
 

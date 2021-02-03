@@ -10,7 +10,7 @@
 ;;;;;;;;;;
 
 
-(medium/refresh-clojure*)
+(medium/co-load*)
 
 
 #?(:clj (println :reload (str *ns*)))

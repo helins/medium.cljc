@@ -11,8 +11,8 @@
 ;;;;;;;;;;
 
 
-(medium/purge-clojure-tracker*)
-(medium/refresh-clojure*)
+(medium/next-reload-cycle*)
+(medium/co-load*)
 
 
 #?(:clj (println :reload (str *ns*)))
