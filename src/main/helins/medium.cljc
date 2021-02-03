@@ -203,7 +203,7 @@
                                  ".clj")))
 
 
-;;;;;;;;;; Refreshing CLJS files
+;;;;;;;;;; Touching files (mainly for forcing recompilation in watching compilers)
 
 
 #?(:clj (defn touch-recur
@@ -226,7 +226,6 @@
            (comp (map (fn [^File file]
                         (let [path (.getCanonicalPath file)]
                           (when (pred-2 path)
-                            (println :path path)
                             (.setLastModified file
                                               now)
                             path))))
@@ -251,7 +250,7 @@
                 (eval pred))))
 
 
-;;;;;;;;;; Refreshing Clojure files
+;;;;;;;;;; Loading Clojure files alongside CLJS
 
 
 #?(:clj (def ^:private -*reloaded
@@ -274,18 +273,19 @@
 
   ([env nspace]
 
-   (when-not (identical? (target env)
-                         :clojure)
-     (let [nspace-2 (ns-name (or nspace
-                                 *ns*))]
-       (when-not (-> (swap-vals! -*reloaded
-                                 conj
-                                 nspace-2)
-                     first
-                     (contains? nspace-2))
-         (require nspace-2
-                  :reload))))
-   nil)))
+   (boolean
+     (when-not (identical? (target env)
+                           :clojure)
+       (let [nspace-2 (ns-name (or nspace
+                                   *ns*))]
+         (when-not (-> (swap-vals! -*reloaded
+                                   conj
+                                   nspace-2)
+                       first
+                       (contains? nspace-2))
+           (require nspace-2
+                    :reload)
+           true)))))))
 
 
 
@@ -327,19 +327,19 @@
 ;;;;;;;;;; Anonymous macros
 
 
-#?(:clj (defn- -form
+#?(:clj (defn- -resolve-target
 
   ;;
 
   [target form+]
 
-  `(do ~@(clojure.walk/postwalk #(if (symbol? %)
-                                   (case (name %)
-                                     "&target"      target
-                                     "&target-init" target-init
-                                     %)
-                                   %)
-                                form+))))
+  (clojure.walk/postwalk #(if (symbol? %)
+                            (case (name %)
+                              "&target"      target
+                              "&target-init" target-init
+                              %)
+                            %)
+                         form+)))
 
 
 
@@ -350,8 +350,9 @@
   [& clojure-form+]
 
   (let [target-now (target &env)
-        form       (-form target-now
-                          clojure-form+)]
+        form       `(do
+                      ~@(-resolve-target target-now
+                                         clojure-form+))]
     (if (identical? target-now
                     :clojure)
       `(eval ~form)
@@ -368,13 +369,13 @@
   [& clojure-form+]
 
   (let [target-now (target &env)
-        form       (-form target-now
-                          clojure-form+)]
+        form       `(do
+                      ~@(-resolve-target target-now
+                                         clojure-form+)
+                      nil)]
     (if (identical? target-now
                     :clojure)
-      `(do
-         ~form
-         nil)
+      form
       (do
         (co-load &env)
         (eval form)
