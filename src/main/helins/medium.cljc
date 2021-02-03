@@ -6,8 +6,7 @@
 
   #?(:clj (:require [clojure.edn]
                     [clojure.string]
-                    [clojure.walk]
-                    [me.raynes.fs    :as fs]))
+                    [clojure.walk]))
   #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
                                                    cljs-optimization*
                                                    co-load*
@@ -19,7 +18,8 @@
                                                    target-init*
                                                    touch-recur*
                                                    when-compiling*
-                                                   when-target*]])))
+                                                   when-target*]]))
+  #?(:clj (:import java.io.File)))
 
 
 ;;;;;;;;;; Extracting information from the Clojurescript compiler
@@ -218,33 +218,20 @@
 
   ([path pred]
 
-   (let [touch (if pred
-                 #(when (pred %)
-                    (fs/touch %)
-                    %)
-                 #(do
-                    (fs/touch %)
-                    %))]
-     (if (fs/directory? path)
-       (into []
-             (comp (mapcat (fn [[root _dir+ file+]]
-                             (map #(touch (str root
-                                               "/"
-                                               %))
-                                  file+)))
-                   (filter some?))
-             (fs/iterate-dir path))
-       (when (touch path)
-         [path]))))
-
-
-  ([target path pred]
-
-   (when (#{:cljs/dev
-            :clojure} target)
-     (touch-recur path
-                  pred)))))
-             
+   (let [now    (System/currentTimeMillis)
+         pred-2 (or pred
+                    (fn [_]
+                      true))]
+     (into []
+           (comp (map (fn [^File file]
+                        (let [path (.getCanonicalPath file)]
+                          (when (pred-2 path)
+                            (println :path path)
+                            (.setLastModified file
+                                              now)
+                            path))))
+                 (filter some?))
+           (file-seq (File. path)))))))
 
 
 
@@ -260,9 +247,8 @@
 
   ([path pred]
 
-   (touch-recur (target &env)
-                path
-                pred)))
+   (touch-recur path
+                (eval pred))))
 
 
 ;;;;;;;;;; Refreshing Clojure files

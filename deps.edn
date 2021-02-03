@@ -1,5 +1,5 @@
 {:deps
- {clj-commons/fs {:mvn/version "1.6.307"}}
+ {}
 
  :paths
  ["src/main"]
