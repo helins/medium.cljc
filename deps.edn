@@ -1,7 +1,5 @@
 {:deps
- {clj-commons/fs              {:mvn/version "1.6.307"}
-  org.clojure/clojure         {:mvn/version "1.10.1"}
-  org.clojure/tools.namespace {:mvn/version "1.1.0"}}
+ {clj-commons/fs {:mvn/version "1.6.307"}}
 
  :paths
  ["src/main"]

@@ -6,9 +6,8 @@
 
   #?(:clj (:require [clojure.edn]
                     [clojure.string]
-                    [clojure.tools.namespace.repl]
                     [clojure.walk]
-                    [me.raynes.fs                  :as fs]))
+                    [me.raynes.fs    :as fs]))
   #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
                                                    cljs-optimization*
                                                    expand*
@@ -23,17 +22,14 @@
                                                    when-target*]])))
 
 
-#?(:clj (clojure.tools.namespace.repl/disable-reload!))
-
-
 ;;;;;;;;;; Flags
 
 
-#?(:clj (def ^:dynamic *refresh-clojure?*
+#?(:clj (def ^:private -*required-nses
 
-  ""
+  ;;
 
-  true))
+  (atom #{})))
 
 
 ;;;;;;;;;; Extracting information from the Clojurescript compiler
@@ -327,17 +323,24 @@
 
   ""
 
-  ;; TODO. Disable when already in Clojure?
+  ([]
 
-  []
+   (refresh-clojure nil))
 
-  (when *refresh-clojure?*
-    (binding [*refresh-clojure?* false
-              clojure.core/*e    nil]
-      (clojure.tools.namespace.repl/refresh)
-      (some-> clojure.core/*e
-              throw)))
-  nil))
+
+  ([nspace]
+
+   (let [nspace-2        (symbol (str (or nspace
+                                          *ns*)))
+         [required-old
+          _required-new] (swap-vals! -*required-nses
+                                     conj
+                                     nspace-2)]
+     (when-not (contains? required-old
+                          nspace-2)
+       (require nspace-2
+                :reload)))
+   nil)))
 
 
 
@@ -347,8 +350,34 @@
 
   []
 
-  (when (cljs? (target &env))
-    (refresh-clojure)))
+  (not-cljs-release &env
+                    &form)
+  (when (identical? (target &env)
+                    :cljs/dev)
+    (refresh-clojure))
+  nil)
+
+
+
+#?(:clj (defn purge-clojure-tracker
+
+  ""
+
+  []
+
+  (reset! -*required-nses
+          #{})))
+
+
+
+(defmacro purge-clojure-tracker*
+
+  ""
+
+  []
+
+  (purge-clojure-tracker)
+  nil)
 
 
 ;;;;;;;;;; Anonymous macros
