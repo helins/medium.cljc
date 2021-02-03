@@ -9,7 +9,8 @@
                     [clojure.tools.namespace.repl]
                     [clojure.walk]
                     [me.raynes.fs                  :as fs]))
-  #?(:cljs (:require-macros [helins.medium :refer [cljs-optimization*
+  #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
+                                                   cljs-optimization*
                                                    expand*
                                                    load-edn*
                                                    load-string*
@@ -353,16 +354,16 @@
 ;;;;;;;;;; Anonymous macros
 
 
-#?(:clj (defn- -prepare-form+
+#?(:clj (defn- -form
 
   ;;
 
-  [env form+]
+  [target form+]
 
   `(do ~@(clojure.walk/postwalk #(if (symbol? %)
                                    (case (name %)
-                                     "&target"      (target env)
-                                     "&target-init" (target-init)
+                                     "&target"      target
+                                     "&target-init" target-init
                                      %)
                                    %)
                                 form+))))
@@ -375,10 +376,15 @@
 
   [& clojure-form+]
 
-  (when (cljs? (target &env))
-    (refresh-clojure))
-  (eval (-prepare-form+ &env
-                        clojure-form+)))
+  (let [target-now (target &env)
+        form       (-form target-now
+                          clojure-form+)]
+    (if (identical? target-now
+                    :clojure)
+      `(eval ~form)
+      (do
+        (refresh-clojure)
+        (eval form)))))
 
 
 
@@ -388,11 +394,18 @@
 
   [& clojure-form+]
 
-  (when (cljs? (target &env))
-    (refresh-clojure))
-  (eval (concat (-prepare-form+ &env
-                                clojure-form+)
-                [nil])))
+  (let [target-now (target &env)
+        form       (-form target-now
+                          clojure-form+)]
+    (if (identical? target-now
+                    :clojure)
+      `(do
+         ~form
+         nil)
+      (do
+        (refresh-clojure)
+        (eval form)
+        nil))))
 
 
 ;;;;;;;;;; Loading and expanding content from files
@@ -424,7 +437,7 @@
 
   [path]
 
-  `(quote ~(slurp path)))
+  (slurp path))
 
 
 ;;;;;;;;;; <!> Important <!>
@@ -433,15 +446,24 @@
 ;;;;;;;;;; is required as a CLJS file.
 
 
-#?(:cljs (when-compiling*
+(defmacro ^:no:doc -init-as-cljs*
 
-(let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
-                           [:options
-                            :optimizations])]
-  (alter-var-root #'cljs-optimization
-                  (constantly optimization))
-  (alter-var-root #'target-init
-                  (constantly (if (identical? optimization
-                                              :advanced)
-                                :cljs/release
-                                :cljs/dev))))))
+  ;;
+
+  []
+
+  (let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
+                             [:options
+                              :optimizations])]
+    (alter-var-root #'cljs-optimization
+                    (constantly optimization))
+    (alter-var-root #'target-init
+                    (constantly (if (identical? optimization
+                                                :advanced)
+                                  :cljs/release
+                                  :cljs/dev))))
+  nil)
+
+
+
+#?(:cljs (-init-as-cljs*))
