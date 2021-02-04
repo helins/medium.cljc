@@ -87,6 +87,29 @@
 
 
 
+(defn reload-all!
+
+  ""
+
+  []
+
+  (-> (swap! -*state
+             (fn [{:as   state
+                   :keys [path+
+                          tracker]}]
+               (cond->
+                 state
+                 (seq path+)
+                 (assoc :tracker
+                        (delay
+                          (-> @tracker
+                              (dissoc :clojure.tools.namespace.dir/time)
+                              (clojure.tools.namespace.dir/scan-dirs path+)
+                              -reload))))))
+      :tracker
+      deref)
+  nil)
+
 
 
 (defn watch!
@@ -95,8 +118,6 @@
 
   [path+]
 
-  (log/info (format "Setting watch for: %s"
-                    path+))
   (let [path-2+     (into #{}
                           (map #(.getCanonicalPath (File. %)))
                           path+)
@@ -121,10 +142,12 @@
                                                                                                      []))
                                                           -reload)))))
                                       (-state)))))
-        watcher-old  (state-old :watcher)
-        watcher-new  (state-new :watcher)]
+        watcher-old (state-old :watcher)
+        watcher-new (state-new :watcher)]
     (when-not (identical? watcher-new
                           watcher-old)
+      (log/info (format "Setting watch for: %s"
+                        path+))
       (-> state-new
           :tracker
           deref)
