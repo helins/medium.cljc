@@ -284,56 +284,42 @@
 ;;;;;;;;;; Loading Clojure alonside CLJS
 
 
-#?(:clj (def ^:private -*co-loaded
+#?(:clj (def ^:private -*co-load
 
   ;;
 
-  (atom #{})))
+  (atom {:registered #{}
+         :reloaded   #{}})))
 
 
 
-#?(:clj (defn co-loaded
+#?(:clj (defn- -missing-co-loaded
 
-  ""
+  ;;
 
-  []
+  [form nspace registered acc]
 
-  @-*co-loaded))
-
-
-
-#?(:clj (defn detect-dep+
-
-  ""
-
-  ([form]
-
-   (detect-dep+ form
-                *ns*))
-
-
-  ([form nspace]
-
-   (detect-dep+ form
-                nspace
-                #{}))
-
-
-  ([form nspace acc]
-
-   (if (coll? form)
-     (reduce (fn [acc-2 form-2]
-               (detect-dep+ form-2
-                            nspace
-                            acc-2))
-             acc
-             form)
-     (if-let [var-resolved (and (symbol? form)
-                                (ns-resolve nspace
-                                            form))]
-       (conj acc
-             (namespace (symbol var-resolved)))
-       acc)))))
+  (if (coll? form)
+    (reduce (fn [acc-2 form-2]
+              (-missing-co-loaded form-2
+                                  nspace
+                                  registered
+                                  acc-2))
+            acc
+            form)
+    (if-let [var-resolved (and (symbol? form)
+                               (ns-resolve nspace
+                                           form))]
+      (let [nspace-dep (-> var-resolved
+                           symbol
+                           namespace
+                           symbol)]
+        (if (contains? registered
+                       nspace-dep)
+          acc
+          (conj acc
+                nspace-dep)))
+      acc))))
           
 
 
@@ -341,20 +327,35 @@
 
   ""
 
-  [env]
+  ([env]
 
-  (boolean
-    (when-not (identical? (target env)
-                          :clojure)
-      (let [nspace-2 (ns-name *ns*)]
-        (when-not (-> (swap-vals! -*co-loaded
-                                  conj
-                                  nspace-2)
-                      first
-                      (contains? nspace-2))
-          (require nspace-2
-                   :reload)
-          true))))))
+   (co-load env
+            nil))
+
+
+  ([env form]
+
+   (when-not (identical? (target env)
+                         :clojure)
+     (let [nspace-2    (ns-name *ns*)
+           [state-old
+            state-new] (swap-vals! -*co-load
+                                   #(-> %
+                                        (update :registered
+                                                conj
+                                                nspace-2)
+                                        (update :reloaded
+                                                conj
+                                                nspace-2)))]
+       (when-not (contains? (state-old :reloaded)
+                            nspace-2)
+         (require nspace-2
+                  :reload)
+         {:missing   (-missing-co-loaded form
+                                         *ns*
+                                         (state-new :registered)
+                                         #{})
+          :namespace nspace-2}))))))
 
 
 
@@ -368,8 +369,10 @@
 
   (when (identical? target-init
                     :cljs/dev)
-    (reset! -*co-loaded
-            #{}))
+    (swap! -*co-load
+           assoc
+           :reloaded
+           #{}))
   state))
 
 
@@ -406,7 +409,8 @@
                     :clojure)
       `(eval ~form)
       (do
-        (co-load &env)
+        (co-load &env
+                 clojure-form+)
         (eval form)))))
 
 
@@ -426,7 +430,8 @@
                     :clojure)
       form
       (do
-        (co-load &env)
+        (co-load &env
+                 clojure-form+)
         (eval form)
         nil))))
 

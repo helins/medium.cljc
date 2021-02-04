@@ -15,7 +15,13 @@
 
   ""
 
-  []
 
-  (println :co-loaded (medium/co-loaded))
-  (medium/co-load &env))
+  ([]
+
+   `(current-ns* nil))
+
+
+  ([form]
+
+   (println :co-loading (medium/co-load &env
+                                        form))))
