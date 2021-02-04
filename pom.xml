@@ -31,9 +31,14 @@
       <version>1.10.2</version>
     </dependency>
     <dependency>
-      <groupId>clj-commons</groupId>
-      <artifactId>fs</artifactId>
-      <version>1.6.307</version>
+      <groupId>org.clojure</groupId>
+      <artifactId>tools.namespace</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>hawk</groupId>
+      <artifactId>hawk</artifactId>
+      <version>0.2.11</version>
     </dependency>
   </dependencies>
   <build>

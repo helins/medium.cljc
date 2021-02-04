@@ -281,101 +281,6 @@
                 (eval pred))))
 
 
-;;;;;;;;;; Loading Clojure alonside CLJS
-
-
-#?(:clj (def ^:private -*co-load
-
-  ;;
-
-  (atom {:registered #{}
-         :reloaded   #{}})))
-
-
-
-#?(:clj (defn- -missing-co-loaded
-
-  ;;
-
-  [form nspace registered acc]
-
-  (if (coll? form)
-    (reduce (fn [acc-2 form-2]
-              (-missing-co-loaded form-2
-                                  nspace
-                                  registered
-                                  acc-2))
-            acc
-            form)
-    (if-let [var-resolved (and (symbol? form)
-                               (ns-resolve nspace
-                                           form))]
-      (let [nspace-dep (-> var-resolved
-                           symbol
-                           namespace
-                           symbol)]
-        (if (contains? registered
-                       nspace-dep)
-          acc
-          (conj acc
-                nspace-dep)))
-      acc))))
-          
-
-
-#?(:clj (defn co-load
-
-  ""
-
-  ([env]
-
-   (co-load env
-            nil))
-
-
-  ([env form]
-
-   (when-not (identical? (target env)
-                         :clojure)
-     (let [nspace-2    (ns-name *ns*)
-           [state-old
-            state-new] (swap-vals! -*co-load
-                                   #(-> %
-                                        (update :registered
-                                                conj
-                                                nspace-2)
-                                        (update :reloaded
-                                                conj
-                                                nspace-2)))]
-       (when-not (contains? (state-old :reloaded)
-                            nspace-2)
-         (require nspace-2
-                  :reload)
-         {:missing   (-missing-co-loaded form
-                                         *ns*
-                                         (state-new :registered)
-                                         #{})
-          :namespace nspace-2}))))))
-
-
-
-#?(:clj (defn compiler-hook
-
-  ""
-
-  {:shadow.build/stage :compile-finish}
-
-  [& [state]]
-
-  (when (identical? target-init
-                    :cljs/dev)
-    (swap! -*co-load
-           assoc
-           :reloaded
-           #{}))
-  state))
-
-
 ;;;;;;;;;; Anonymous macros
 
 
@@ -409,8 +314,7 @@
                     :clojure)
       `(eval ~form)
       (do
-        (co-load &env
-                 clojure-form+)
+        (require (ns-name *ns*))
         (eval form)))))
 
 
@@ -430,10 +334,8 @@
                     :clojure)
       form
       (do
-        (co-load &env
-                 clojure-form+)
-        (eval form)
-        nil))))
+        (require (ns-name *ns*))
+        (eval form)))))
 
 
 ;;;;;;;;;; Loading and expanding content from files

@@ -2,15 +2,10 @@
 
   ""
 
-  {:author "Adam Helinski"}
-
-  (:require [helins.medium.dev.co-load :as medium.dev.co-load]))
+  {:author "Adam Helinski"})
 
 
 ;;;;;;;;;;
-
-
-(medium.dev.co-load/current-ns*)
 
 
 #?(:clj (println :reload (str *ns*)))
