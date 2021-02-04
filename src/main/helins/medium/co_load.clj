@@ -8,7 +8,8 @@
             [clojure.tools.namespace.file]
             [clojure.tools.namespace.reload]
             [clojure.tools.namespace.track]
-            [hawk.core                       :as hawk])
+            [hawk.core                       :as hawk]
+            [taoensso.timbre                 :as log])
   (:import java.io.File))
 
 
@@ -66,12 +67,36 @@
 
 
 
+
+(defn- -reload
+
+  ;;
+
+  [tracker]
+
+  (when-some [nspace+ (not-empty (vec (tracker :clojure.tools.namespace.track/load)))]
+    (log/info (format "Reloading: %s"
+                      nspace+)))
+  (let [tracker-2 (clojure.tools.namespace.reload/track-reload tracker)]
+    (when-some [err (tracker-2 :clojure.tools.namespace.reload/error)]
+      (log/fatal err
+                 (format "Error while reloading Clojure namespace: %s"
+                         (tracker-2 :clojure.tools.namespace.reload/error-ns)))
+      tracker)
+    tracker-2))
+
+
+
+
+
 (defn watch!
 
   ""
 
   [path+]
 
+  (log/info (format "Setting watch for: %s"
+                    path+))
   (let [path-2+     (into #{}
                           (map #(.getCanonicalPath (File. %)))
                           path+)
@@ -94,7 +119,7 @@
                                                       (-> @tracker
                                                           (clojure.tools.namespace.dir/scan-dirs (or path+
                                                                                                      []))
-                                                          clojure.tools.namespace.reload/track-reload)))))
+                                                          -reload)))))
                                       (-state)))))
         watcher-old  (state-old :watcher)
         watcher-new  (state-new :watcher)]
@@ -123,7 +148,7 @@
              :tracker
              (fn [tracker]
                (delay
-                 (clojure.tools.namespace.reload/track-reload @tracker))))
+                 (-reload @tracker))))
       :tracker
       deref)
   nil)

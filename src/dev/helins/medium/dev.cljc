@@ -13,8 +13,6 @@
 
 #?(:clj (println :reload (str *ns*)))
 
-ok
-
 
 (defn on-load
 
