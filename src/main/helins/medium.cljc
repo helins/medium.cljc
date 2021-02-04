@@ -9,11 +9,9 @@
                     [clojure.walk]))
   #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
                                                    cljs-optimization*
-                                                   co-load*
                                                    expand*
                                                    load-edn*
                                                    load-string*
-                                                   next-reload-cycle*
                                                    target*
                                                    target-init*
                                                    touch-recur*
@@ -250,7 +248,7 @@
                 (eval pred))))
 
 
-;;;;;;;;;; Loading Clojure files alongside CLJS
+;;;;;;;;;; Loading Clojure alonside CLJS
 
 
 #?(:clj (def ^:private -*reloaded
@@ -265,63 +263,36 @@
 
   ""
 
-  ([env]
-
-   (co-load env
-            nil))
-
-
-  ([env nspace]
-
-   (boolean
-     (when-not (identical? (target env)
-                           :clojure)
-       (let [nspace-2 (ns-name (or nspace
-                                   *ns*))]
-         (when-not (-> (swap-vals! -*reloaded
-                                   conj
-                                   nspace-2)
-                       first
-                       (contains? nspace-2))
-           (require nspace-2
-                    :reload)
-           true)))))))
-
-
-
-(defmacro co-load*
-
-  ""
-
-  []
-
-  (co-load &env)
-  nil)
-
-
-
-#?(:clj (defn next-reload-cycle
-
-  ""
-
   [env]
 
+  (boolean
+    (when-not (identical? (target env)
+                          :clojure)
+      (let [nspace-2 (ns-name *ns*)]
+        (when-not (-> (swap-vals! -*reloaded
+                                  conj
+                                  nspace-2)
+                      first
+                      (contains? nspace-2))
+          (require nspace-2
+                   :reload)
+          true))))))
 
-  (when (identical? (target env)
-                    :cljs/dev)
-    (reset! -*reloaded
-            #{}))))
 
 
-
-(defmacro next-reload-cycle*
+#?(:clj (defn compiler-hook
 
   ""
 
-  []
+  {:shadow.build/stage :compile-finish}
 
-  (next-reload-cycle &env)
-  nil)
+  [& [state]]
+
+  (when (identical? target-init
+                    :cljs/dev)
+    (reset! -*reloaded
+            #{}))
+  state))
 
 
 ;;;;;;;;;; Anonymous macros

@@ -4,13 +4,13 @@
 
   {:author "Adam Helinski"}
 
-  (:require [helins.medium :as medium]))
+  (:require [helins.medium.dev.co-load :as medium.dev.co-load]))
 
 
 ;;;;;;;;;;
 
 
-(medium/co-load*)
+(medium.dev.co-load/current-ns*)
 
 
 #?(:clj (println :reload (str *ns*)))
