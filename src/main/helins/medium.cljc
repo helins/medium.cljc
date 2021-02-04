@@ -284,12 +284,57 @@
 ;;;;;;;;;; Loading Clojure alonside CLJS
 
 
-#?(:clj (def ^:private -*reloaded
+#?(:clj (def ^:private -*co-loaded
 
   ;;
 
   (atom #{})))
 
+
+
+#?(:clj (defn co-loaded
+
+  ""
+
+  []
+
+  @-*co-loaded))
+
+
+
+#?(:clj (defn detect-dep+
+
+  ""
+
+  ([form]
+
+   (detect-dep+ form
+                *ns*))
+
+
+  ([form nspace]
+
+   (detect-dep+ form
+                nspace
+                #{}))
+
+
+  ([form nspace acc]
+
+   (if (coll? form)
+     (reduce (fn [acc-2 form-2]
+               (detect-dep+ form-2
+                            nspace
+                            acc-2))
+             acc
+             form)
+     (if-let [var-resolved (and (symbol? form)
+                                (ns-resolve nspace
+                                            form))]
+       (conj acc
+             (namespace (symbol var-resolved)))
+       acc)))))
+          
 
 
 #?(:clj (defn co-load
@@ -302,7 +347,7 @@
     (when-not (identical? (target env)
                           :clojure)
       (let [nspace-2 (ns-name *ns*)]
-        (when-not (-> (swap-vals! -*reloaded
+        (when-not (-> (swap-vals! -*co-loaded
                                   conj
                                   nspace-2)
                       first
@@ -323,7 +368,7 @@
 
   (when (identical? target-init
                     :cljs/dev)
-    (reset! -*reloaded
+    (reset! -*co-loaded
             #{}))
   state))
 

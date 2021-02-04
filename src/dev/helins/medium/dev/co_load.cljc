@@ -17,4 +17,5 @@
 
   []
 
+  (println :co-loaded (medium/co-loaded))
   (medium/co-load &env))
