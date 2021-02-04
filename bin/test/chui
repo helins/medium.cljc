@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-rm -rf chui/js/*
+rm -rf ./.shadow-cljs/builds/test
 command="$1"
 shift
 clj -M:test:cljs "$command" test "$@"

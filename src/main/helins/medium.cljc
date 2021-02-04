@@ -107,7 +107,40 @@
      :clojure))
 
 
-;;;;;;;;;; Macros simplify output code depending on target
+;; <!> Important <!>
+;;
+;; Detects if initially compiling for CLJS. The trick is executing Clojure code only when this namespace
+;; is required as a CLJS file.
+
+
+(defmacro ^:no:doc -init-as-cljs*
+
+  ;;
+
+  []
+
+  (let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
+                             [:options
+                              :optimizations])]
+    (alter-var-root #'cljs-optimization
+                    (constantly optimization))
+    (alter-var-root #'target-init
+                    (constantly
+                      (case (&env :shadow.build/mode)
+                        :dev     :cljs/dev
+                        :release :cljs/release
+                        (if (identical? optimization
+                                        :none)
+                          :cljs/dev
+                          :cljs/release)))))
+  nil)
+
+
+
+#?(:cljs (-init-as-cljs*))
+
+
+;;;;;;;;;; Macros simplify outputting code depending on target
 
 
 #?(:clj (defn not-cljs-release
@@ -125,7 +158,7 @@
 
 
 
-(defn- -when-requested-target
+#?(:clj (defn- -when-requested-target
 
   ""
 
@@ -137,7 +170,7 @@
                 target-request)
           (identical? target
                       target-request))
-    `(do ~@form+)))
+    `(do ~@form+))))
 
 
 
@@ -164,7 +197,7 @@
                           form+))
 
 
-;;;;;;;;;; File extensions
+;;;;;;;;;; Testing file extensions
 
 
 (defn file-cljc?
@@ -383,32 +416,3 @@
   [path]
 
   (slurp path))
-
-
-;;;;;;;;;; <!> Important <!>
-;;;;;;;;;;
-;;;;;;;;;; Detects if initially compiling for CLJS. The trick is executing Clojure code only when this namespace
-;;;;;;;;;; is required as a CLJS file.
-
-
-(defmacro ^:no:doc -init-as-cljs*
-
-  ;;
-
-  []
-
-  (let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
-                             [:options
-                              :optimizations])]
-    (alter-var-root #'cljs-optimization
-                    (constantly optimization))
-    (alter-var-root #'target-init
-                    (constantly (if (identical? optimization
-                                                :advanced)
-                                  :cljs/release
-                                  :cljs/dev))))
-  nil)
-
-
-
-#?(:cljs (-init-as-cljs*))
