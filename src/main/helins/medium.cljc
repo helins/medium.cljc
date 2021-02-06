@@ -7,57 +7,24 @@
   #?(:clj (:require [clojure.edn]
                     [clojure.string]
                     [clojure.walk]))
-  #?(:cljs (:require-macros [helins.medium :refer [-init-as-cljs*
-                                                   cljs-optimization*
-                                                   expand*
+  #?(:cljs (:require-macros [helins.medium :refer [expand*
                                                    load-edn*
                                                    load-string*
                                                    target*
-                                                   target-init*
                                                    touch-recur*
                                                    when-compiling*
                                                    when-target*]]))
   #?(:clj (:import java.io.File)))
 
 
-;;;;;;;;;; Extracting information from the Clojurescript compiler
+;;;;;;;;; Deducing the compilation target from a macro's &env
 
 
-#?(:clj (def cljs-optimization
+#?(:clj (defonce ^:private -*cljs-mode
 
-  ""
+  ;;
 
-  nil))
-
-
-
-(defmacro cljs-optimization*
-
-  ""
-
-  []
-
-  cljs-optimization)
-
-
-;;;;;;;;; Detecting the target (at initialization and currently)
-
-
-#?(:clj (def target-init
-
-  ""
-
-  :clojure))
-
-
-
-(defmacro target-init*
-
-  ""
-
-  []
-
-  target-init)
+  (atom nil)))
 
 
 
@@ -68,7 +35,17 @@
   [env]
 
   (if (:ns env)
-    target-init
+    (swap! -*cljs-mode
+           #(or %
+                (case (env :shadow.build/mode)
+                  :dev     :cljs/dev
+                  :release :cljs/release
+                  (if (identical? (get-in @@(requiring-resolve 'cljs.env/*compiler*)
+                                          [:options
+                                           :optimizations])
+                                  :none)
+                    :cljs/dev
+                    :cljs/release))))
     :clojure)))
 
 
@@ -105,39 +82,6 @@
 
   (= target
      :clojure))
-
-
-;; <!> Important <!>
-;;
-;; Detects if initially compiling for CLJS. The trick is executing Clojure code only when this namespace
-;; is required as a CLJS file.
-
-
-(defmacro ^:no:doc -init-as-cljs*
-
-  ;;
-
-  []
-
-  (let [optimization (get-in @@(requiring-resolve 'cljs.env/*compiler*)
-                             [:options
-                              :optimizations])]
-    (alter-var-root #'cljs-optimization
-                    (constantly optimization))
-    (alter-var-root #'target-init
-                    (constantly
-                      (case (&env :shadow.build/mode)
-                        :dev     :cljs/dev
-                        :release :cljs/release
-                        (if (identical? optimization
-                                        :none)
-                          :cljs/dev
-                          :cljs/release)))))
-  nil)
-
-
-
-#?(:cljs (-init-as-cljs*))
 
 
 ;;;;;;;;;; Macros simplify outputting code depending on target
@@ -182,18 +126,6 @@
 
   (-when-requested-target target-request
                           (target &env)
-                          form+))
-
-
-
-(defmacro when-target-init*
-
-  ""
-
-  [target-request & form+]
-
-  (-when-requested-target target-request
-                          target-init
                           form+))
 
 
@@ -290,11 +222,9 @@
 
   [target form+]
 
-  (clojure.walk/postwalk #(if (symbol? %)
-                            (case (name %)
-                              "&target"      target
-                              "&target-init" target-init
-                              %)
+  (clojure.walk/postwalk #(if (= %
+                                 '&target)
+                            target
                             %)
                          form+)))
 

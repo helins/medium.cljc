@@ -12,19 +12,6 @@
 ;;;;;;;;;;
 
 
-(t/deftest cljs-optimization
-
-  (let [x (medium/cljs-optimization*)]
-    (t/is #?(:clj  (nil? x)
-             :cljs (some? x))
-          "CLJS compiler optimization only exist when compiling CLJS")
-
-    #?(:clj (t/is (= medium/cljs-optimization
-                     x)
-                  "Macro returns the same result as the function"))))
-
-
-
 (t/deftest target
 
   (let [x (medium/target*)]
@@ -36,21 +23,6 @@
 
     #?(:clj (t/is (= x
                      (medium/target nil))
-                  "Macro returns the same result as the function"))))
-
-
-
-(t/deftest target-init
-
-  (let [x (medium/target-init*)]
-    (t/is #?(:clj  (= :clojure
-                      x)
-             :cljs (#{:cljs/dev
-                      :cljs/release} x))
-          "Initial target is set accordingly")
-
-    #?(:clj (t/is (= x
-                     medium/target-init)
                   "Macro returns the same result as the function"))))
 
 
@@ -95,9 +67,12 @@
 #?(:clj (def *a (atom false)))
 
 
+#?(:clj (def b true))
+
+
 (medium/when-compiling*
   (reset! *a
-          true))
+          b))
 
 
 

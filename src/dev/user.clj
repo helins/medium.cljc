@@ -10,5 +10,5 @@
 
 (println :user)
 
-(medium.dev/on-load)
 
+(medium.dev/on-load)
