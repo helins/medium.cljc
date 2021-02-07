@@ -36,6 +36,14 @@
 
 
 
+(def compile-cycle
+
+  ""
+
+  nil)
+
+
+
 (defn- -hawk-handler
 
   ""
@@ -189,10 +197,14 @@
   {:shadow.build/stages #{:compile-prepare
                           :configure}}
 
-  [{:as                build
-    :shadow.build/keys [stage]}
+  [{:as                    build
+    :shadow.build/keys     [stage]
+    :shadow.build.api/keys [compile-cycle]}
    plugin+]
 
+  (some-> compile-cycle
+          (->> constantly
+               (alter-var-root #'compile-cycle)))
   (case stage
     :compile-prepare (reload!)
     :configure       (configure plugin+))
