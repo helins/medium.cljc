@@ -81,6 +81,38 @@
 
 
 
+(defn- -exec-plugin-hook+
+
+  ;;
+
+  [stage plugin+ param+]
+
+  (doseq [[plugin-id
+           plugin-config] plugin+]
+    (when-some [sym-f (plugin-config stage)]
+      (if-some [var-f (try
+                        (requiring-resolve sym-f)
+                        (catch Throwable e
+                          (log/error e
+                                     (format "While requiring and resolving plugin hook: %s for %s"
+                                             sym-f
+                                             stage))
+                          nil))]
+        (try
+          (@var-f (assoc param+
+                         :medium.co-load/stage         stage
+                         :medium.co-load.plugin/id     plugin-id
+                         :medium.co-load.plugin/config plugin-config))
+          (catch Throwable e
+            (log/error e
+                       (format "While executing pluing hook: %s for %s"
+                               sym-f
+                               stage))))
+        (log/error (format "Unable to resolve: %s"
+                           sym-f)))))
+  nil)
+
+
 
 (defn- -reload
 
@@ -100,30 +132,10 @@
     (when (seq reload+)
       (log/info (format "Will reload: %s"
                         reload+)))
-    (doseq [[plugin-id
-             plugin-config] plugin+]
-      (when-some [sym-f (plugin-config stage)]
-        (if-some [var-f (try
-                          (requiring-resolve sym-f)
-                          (catch Throwable e
-                            (log/error e
-                                       (format "While requiring and resolving plugin hook: %s for %s"
-                                               sym-f
-                                               stage))
-                            nil))]
-          (try
-            (@var-f {:medium.co-load/reload+       reload+
-                     :medium.co-load/remove+       remove+
-                     :medium.co-load/stage         stage
-                     :medium.co-load.plugin/id     plugin-id
-                     :medium.co-load.plugin/config plugin-config})
-            (catch Throwable e
-              (log/error e
-                         (format "While executing pluing hook: %s for %s"
-                                 sym-f
-                                 stage))))
-          (log/error (format "Unable to resolve: %s"
-                             sym-f))))))
+    (-exec-plugin-hook+ stage
+                        plugin+
+                        {:medium.co-load/remove+ remove+
+                         :medium.co-load/stage   stage}))
   (let [tracker-2 (clojure.tools.namespace.reload/track-reload tracker)]
     (when-some [err (tracker-2 :clojure.tools.namespace.reload/error)]
       (log/fatal err
@@ -134,7 +146,6 @@
     tracker-2))
 
 
-;(defn foo [x] (println :x x))
 
 
 ; (defn reload-all!
@@ -238,7 +249,8 @@
 
   ""
 
-  {:shadow.build/stages #{:compile-prepare
+  {:shadow.build/stages #{:compile-finish
+                          :compile-prepare
                           :configure}}
 
   [{:as                    build
@@ -246,14 +258,34 @@
     :shadow.build.api/keys [compile-cycle]}
    plugin+]
 
-  (some->> compile-cycle
-           (swap! -*state
-                  assoc
-                  :compile-cycle))
-  (case stage
-    :compile-prepare (compile-prepare plugin+)
-    :configure       (configure plugin+))
+  (try
+    (some->> compile-cycle
+             (swap! -*state
+                    assoc
+                    :compile-cycle))
+    (case stage
+      :compile-finish  (-exec-plugin-hook+ stage
+                                           plugin+
+                                           nil)
+      :compile-prepare (compile-prepare plugin+)
+      :configure       (configure plugin+))
+    (catch Throwable e
+      (log/fatal e
+                 (format "During compilation stage %s"
+                         stage))))
   build)
+
+
+
+
+(defn ^:no-doc -plugin-hook-test
+
+  ;;
+
+  [x]
+
+  (println :plugin-hook x))
+
 
 
 
