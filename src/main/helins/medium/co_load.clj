@@ -4,7 +4,8 @@
 
   {:author "Adam Helinski"}
 
-  (:require [clojure.tools.namespace.dir]
+  (:require [clojure.set]
+            [clojure.tools.namespace.dir]
             [clojure.tools.namespace.file]
             [clojure.tools.namespace.reload]
             [clojure.tools.namespace.track]
@@ -36,11 +37,15 @@
 
 
 
-(def compile-cycle
+(defn compile-cycle
 
   ""
 
-  nil)
+  []
+
+  (-> -*state
+      deref
+      :compile-cycle))
 
 
 
@@ -81,43 +86,76 @@
 
   ;;
 
-  [tracker]
+  [tracker stage plugin+]
 
-  (when-some [nspace+ (not-empty (vec (tracker :clojure.tools.namespace.track/load)))]
-    (log/info (format "Reloading: %s"
-                      nspace+)))
+  (let [unload+  (into #{}
+                       (tracker :clojure.tools.namespace.track/unload))
+        reload+  (into #{}
+                      (tracker :clojure.tools.namespace.track/load))
+        remove+  (clojure.set/difference unload+
+                                         reload+)]
+    (when (seq remove+)
+      (log/info (format "Will unload: %s"
+                        remove+)))
+    (when (seq reload+)
+      (log/info (format "Will reload: %s"
+                        reload+)))
+    (doseq [sym-f (eduction (comp (map (comp stage
+                                             second))
+                                  (filter some?))
+                            plugin+)]
+      (if-some [var-f (try
+                        (requiring-resolve sym-f)
+                        (catch Throwable e
+                          (log/error e
+                                     (format "While requiring and resolving plugin hook: %s for %s"
+                                             sym-f
+                                             stage))
+                          nil))]
+        (try
+          (@var-f {:medium.co-load/reload+ reload+
+                   :medium.co-load/remove+ remove+
+                   :medium.co-load/stage   stage})
+          (catch Throwable e
+            (log/error e
+                       (format "While executing pluing hook: %s for %s"
+                               sym-f
+                               stage))))
+        (log/error (format "Unable to resolve: %s"
+                           sym-f)))))
   (let [tracker-2 (clojure.tools.namespace.reload/track-reload tracker)]
     (when-some [err (tracker-2 :clojure.tools.namespace.reload/error)]
       (log/fatal err
-                 (format "Error while reloading Clojure namespace: %s"
-                         (tracker-2 :clojure.tools.namespace.reload/error-ns)))
+                 (format "Error while reloading Clojure namespace: %s during %s"
+                         (tracker-2 :clojure.tools.namespace.reload/error-ns)
+                         stage))
       tracker)
     tracker-2))
 
 
 
-(defn reload-all!
-
-  ""
-
-  []
-
-  (-> (swap! -*state
-             (fn [{:as   state
-                   :keys [path+
-                          tracker]}]
-               (cond->
-                 state
-                 (seq path+)
-                 (assoc :tracker
-                        (delay
-                          (-> @tracker
-                              (dissoc :clojure.tools.namespace.dir/time)
-                              (clojure.tools.namespace.dir/scan-dirs path+)
-                              -reload))))))
-      :tracker
-      deref)
-  nil)
+; (defn reload-all!
+; 
+;   ""
+; 
+;   []
+; 
+;   (-> (swap! -*state
+;              (fn [{:as   state
+;                    :keys [path+
+;                           tracker]}]
+;                (cond->
+;                  state
+;                  (seq path+)
+;                  (assoc :tracker
+;                         (delay
+;                           (-> @tracker
+;                               (dissoc :clojure.tools.namespace.dir/time)
+;                               (clojure.tools.namespace.dir/scan-dirs path+)
+;                               (-reload :compile-prepare
+;       :tracker
+;       deref)
+;   nil)
 
 
 
@@ -150,14 +188,15 @@
                                                     (delay
                                                       (-> @tracker
                                                           (clojure.tools.namespace.dir/scan-dirs path+)
-                                                          -reload)))))
+                                                          (-reload :configure
+                                                                   plugin+))))))
                                       (-state)))))
         watcher-old (state-old :watcher)
         watcher-new (state-new :watcher)]
     (when-not (identical? watcher-new
                           watcher-old)
       (if path+
-        (log/info (format "Watching for: %s"
+        (log/info (format "Watching: %s"
                           path+))
         (log/warn "Watching nothing: no path specified"))
       (-> state-new
@@ -172,18 +211,20 @@
 
 
 
-(defn reload!
+(defn compile-prepare
 
   ""
 
-  []
+  [plugin+]
 
   (-> (swap! -*state
              update
              :tracker
              (fn [tracker]
                (delay
-                 (-reload @tracker))))
+                 (-reload @tracker
+                          :compile-prepare
+                          plugin+))))
       :tracker
       deref)
   nil)
@@ -202,11 +243,12 @@
     :shadow.build.api/keys [compile-cycle]}
    plugin+]
 
-  (some-> compile-cycle
-          (->> constantly
-               (alter-var-root #'compile-cycle)))
+  (some->> compile-cycle
+           (swap! -*state
+                  assoc
+                  :compile-cycle))
   (case stage
-    :compile-prepare (reload!)
+    :compile-prepare (compile-prepare plugin+)
     :configure       (configure plugin+))
   build)
 
@@ -215,7 +257,8 @@
 (comment
 
   (shadow-cljs-hook {:shadow.build/stage :configure}
-                    {:test {:path+ ["src/dev"]}})
+                    {:test {
+                            :path+ ["src/dev"]}})
 
   (shadow-cljs-hook {:shadow.build/stage :configure}
                     nil)
