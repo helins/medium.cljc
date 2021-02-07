@@ -113,42 +113,45 @@
 
 
 
-(defn watch!
+(defn configure
 
   ""
 
-  [path+]
+  [plugin+]
 
-  (let [path-2+     (into #{}
-                          (map #(.getCanonicalPath (File. %)))
-                          path+)
+  (let [path+       (not-empty (into #{}
+                                     (comp (map second)
+                                           (mapcat :path+)
+                                           (map #(.getCanonicalPath (File. %))))
+                                     plugin+))
         [state-old
          state-new] (swap-vals! -*state
                                 (fn [state]
-                                  (if (= path-2+
+                                  (if (= path+
                                          (state :path+))
                                     state
-                                    (if (seq path-2+)
+                                    (if path+
                                       (-> (assoc state
-                                                 :path+   path-2+
+                                                 :path+   path+
                                                  :watcher (delay
                                                             (hawk/watch! [{:filter  -hawk-clojure-file?
                                                                            :handler -hawk-handler
-                                                                           :paths   path-2+}])))
+                                                                           :paths   path+}])))
                                           (update :tracker
                                                   (fn [tracker]
                                                     (delay
                                                       (-> @tracker
-                                                          (clojure.tools.namespace.dir/scan-dirs (or path+
-                                                                                                     []))
+                                                          (clojure.tools.namespace.dir/scan-dirs path+)
                                                           -reload)))))
                                       (-state)))))
         watcher-old (state-old :watcher)
         watcher-new (state-new :watcher)]
     (when-not (identical? watcher-new
                           watcher-old)
-      (log/info (format "Setting watch for: %s"
-                        path+))
+      (if path+
+        (log/info (format "Watching for: %s"
+                          path+))
+        (log/warn "Watching nothing: no path specified"))
       (-> state-new
           :tracker
           deref)
@@ -188,11 +191,11 @@
 
   [{:as                build
     :shadow.build/keys [stage]}
-   & [param+]]
+   plugin+]
 
   (case stage
     :compile-prepare (reload!)
-    :configure       (watch! (:path+ param+)))
+    :configure       (configure plugin+))
   build)
 
 
@@ -200,12 +203,13 @@
 (comment
 
   (shadow-cljs-hook {:shadow.build/stage :configure}
-                    {:path+ []})
+                    {:test {:path+ ["src/dev"]}})
 
   (shadow-cljs-hook {:shadow.build/stage :configure}
-                    {:path+ ["src/dev"]})
+                    nil)
 
-  (shadow-cljs-hook {:shadow.build/stage :compile-prepare})
+  (shadow-cljs-hook {:shadow.build/stage :compile-prepare}
+                    nil)
 
 
 
