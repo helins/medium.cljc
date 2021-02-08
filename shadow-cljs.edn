@@ -1,9 +1,7 @@
 {:builds
  {:dev
   {:asset-path       "/js"
-   :build-hooks      [(helins.medium.co-load/shadow-cljs-hook {:test {; :compile-finish  helins.medium.co-load/-plugin-hook-test
-                                                                      ; :compile-prepare helins.medium.co-load/-plugin-hook-test
-                                                                      :path+           ["src/dev"]}})]
+   :build-hooks      [(helins.medium.co-load/shadow-cljs-hook {helins.medium.co-load/-plugin-test {:medium.co-load/path+ ["src/dev"]}})]
    :compiler-options {:infer-externs :auto}
    :devtools         {:after-load helins.medium.dev/on-load
                       :preloads   [shadow.remote.runtime.cljs.browser]}

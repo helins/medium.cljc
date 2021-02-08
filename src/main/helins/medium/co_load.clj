@@ -87,29 +87,33 @@
 
   [stage plugin+ param+]
 
-  (doseq [[plugin-id
+  (doseq [[plugin-sym
            plugin-config] plugin+]
-    (when-some [sym-f (plugin-config stage)]
-      (if-some [var-f (try
-                        (requiring-resolve sym-f)
-                        (catch Throwable e
-                          (log/error e
-                                     (format "While requiring and resolving plugin hook: %s for %s"
-                                             sym-f
-                                             stage))
-                          nil))]
-        (try
-          (@var-f (assoc param+
-                         :medium.co-load/stage         stage
-                         :medium.co-load.plugin/id     plugin-id
-                         :medium.co-load.plugin/config plugin-config))
-          (catch Throwable e
-            (log/error e
-                       (format "While executing pluing hook: %s for %s"
-                               sym-f
-                               stage))))
-        (log/error (format "Unable to resolve: %s"
-                           sym-f)))))
+    (if-some [var-plugin (try
+                           (requiring-resolve plugin-sym)
+                           (catch Throwable e
+                             (log/error e
+                                        (format "While requiring and resolving plugin hook: %s for %s"
+                                                plugin-sym
+                                                stage))
+                             nil))]
+      (let [meta-plugin (meta var-plugin)]
+        (when (or (identical? (:shadow.build/stage meta-plugin)
+                              stage)
+                  (contains? (:shadow.build/stages meta-plugin)
+                             stage))
+          (try
+            (@var-plugin (-> (merge param+
+                                    plugin-config)
+                             (assoc :shadow.build/stage
+                                    stage)))
+            (catch Throwable e
+              (log/error e
+                         (format "While executing plugin  hook: %s for %s"
+                                 plugin-sym
+                                 stage))))))
+      (log/error (format "Unable to resolve: %s"
+                         plugin-sym))))
   nil)
 
 
@@ -120,22 +124,23 @@
 
   [tracker stage plugin+]
 
-  (let [unload+  (into #{}
+  (let [load+    (into #{}
+                       (tracker :clojure.tools.namespace.track/load))
+        unload+  (into #{}
                        (tracker :clojure.tools.namespace.track/unload))
-        reload+  (into #{}
-                      (tracker :clojure.tools.namespace.track/load))
         remove+  (clojure.set/difference unload+
-                                         reload+)]
+                                         load+)]
     (when (seq remove+)
       (log/info (format "Will unload: %s"
                         remove+)))
-    (when (seq reload+)
-      (log/info (format "Will reload: %s"
-                        reload+)))
+    (when (seq load+)
+      (log/info (format "Will load: %s"
+                        load+)))
     (-exec-plugin-hook+ stage
                         plugin+
-                        {:medium.co-load/remove+ remove+
-                         :medium.co-load/stage   stage}))
+                        {:medium.co-load/load+   load+
+                         :medium.co-load/stage   stage
+                         :medium.co-load/unload+ remove+}))
   (let [tracker-2 (clojure.tools.namespace.reload/track-reload tracker)]
     (when-some [err (tracker-2 :clojure.tools.namespace.reload/error)]
       (log/fatal err
@@ -180,7 +185,7 @@
 
   (let [path+       (not-empty (into #{}
                                      (comp (map second)
-                                           (mapcat :path+)
+                                           (mapcat :medium.co-load/path+)
                                            (map #(.getCanonicalPath (File. %))))
                                      plugin+))
         [state-old
@@ -277,9 +282,12 @@
 
 
 
-(defn ^:no-doc -plugin-hook-test
+(defn ^:no-doc -plugin-test
 
   ;;
+
+  {:shadow.build/stages #{:compile-finish
+                          :configure}}
 
   [x]
 
@@ -290,17 +298,6 @@
 
 (comment
 
-  (shadow-cljs-hook {:shadow.build/stage :configure}
-                    {:test {
-                            :path+ ["src/dev"]}})
-
-  (shadow-cljs-hook {:shadow.build/stage :configure}
-                    nil)
-
-  (shadow-cljs-hook {:shadow.build/stage :compile-prepare}
-                    nil)
-
-
 
   (-> -*state
       deref
@@ -308,7 +305,5 @@
       deref
       :clojure.tools.namespace.track/unload)
 
+
   )
-
-
-
