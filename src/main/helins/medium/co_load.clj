@@ -148,28 +148,27 @@
 
 
 
-; (defn reload-all!
-; 
-;   ""
-; 
-;   []
-; 
-;   (-> (swap! -*state
-;              (fn [{:as   state
-;                    :keys [path+
-;                           tracker]}]
-;                (cond->
-;                  state
-;                  (seq path+)
-;                  (assoc :tracker
-;                         (delay
-;                           (-> @tracker
-;                               (dissoc :clojure.tools.namespace.dir/time)
-;                               (clojure.tools.namespace.dir/scan-dirs path+)
-;                               (-reload :compile-prepare
-;       :tracker
-;       deref)
-;   nil)
+(defn clear!
+
+  ""
+
+  []
+
+  (-> (swap! -*state
+             (fn [{:as   state
+                   :keys [path+
+                          tracker]}]
+               (cond->
+                 state
+                 (seq path+)
+                 (assoc :tracker
+                        (delay
+                          (-> @tracker
+                              (dissoc :clojure.tools.namespace.dir/time)
+                              (clojure.tools.namespace.dir/scan-dirs path+)))))))
+      :tracker
+      deref)
+  nil)
 
 
 
