@@ -45,22 +45,23 @@
 
 
 
-(def expand-test-var)
+(def *expand-test
+     (atom nil))
 
 
 
 (medium/expand*
   (let [x 1]
-    `(alter-var-root (var expand-test-var)
-                     (constantly ~(+ expand-test-value
-                                     x)))))
+    `(reset! *expand-test
+             ~(+ expand-test-value
+                 x))))
 
 
 (t/deftest expand*
 
   (t/is (= (+ 1
               expand-test-value)
-           expand-test-var)
+           @*expand-test)
         "Var was defined during expansion"))
 
 
