@@ -211,20 +211,24 @@
                                       (-state)))))
         watcher-old (state-old :watcher)
         watcher-new (state-new :watcher)]
-    (when-not (identical? watcher-new
-                          watcher-old)
-      (if path+
-        (log/info (format "Watching: %s"
-                          path+))
-        (log/warn "Watching nothing: no path specified"))
-      (-> state-new
-          :tracker
-          deref)
-      (some-> watcher-old
-              (-> deref
-                  hawk/stop!))
-      (some-> watcher-new
-              deref)))
+    (if (identical? watcher-new
+                    watcher-old)
+      (-exec-plugin-hook+ :configure
+                          plugin+
+                          nil)
+      (do
+        (if path+
+          (log/info (format "Watching: %s"
+                            path+))
+          (log/warn "Watching nothing: no path specified"))
+        (-> state-new
+            :tracker
+            deref)
+        (some-> watcher-old
+                (-> deref
+                    hawk/stop!))
+        (some-> watcher-new
+                deref))))
   nil)
 
 
