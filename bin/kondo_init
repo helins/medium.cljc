@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+
+mkdir -p .clj-kondo
+clj-kondo --no-warnings --parallel --lint "$(clojure -Spath)"

@@ -10,7 +10,6 @@
             [clojure.tools.namespace.reload]
             [clojure.tools.namespace.track]
             [hawk.core                       :as hawk]
-            [helins.medium                   :as medium]
             [taoensso.timbre                 :as log])
   (:import java.io.File))
 

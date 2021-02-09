@@ -7,6 +7,7 @@
   #?(:clj (:require [clojure.edn]
                     [clojure.string]
                     [clojure.walk]))
+  #?(:cljs (:require [clojure.string]))
   #?(:cljs (:require-macros [helins.medium :refer [expand*
                                                    load-edn*
                                                    load-string*
@@ -50,13 +51,13 @@
 
 
 
-(defmacro target*
+#?(:clj (defmacro target*
 
   ""
 
   []
 
-  (target &env))
+  (target &env)))
 
 
 ;;;;;
@@ -118,7 +119,7 @@
 
 
 
-(defmacro when-target*
+#?(:clj (defmacro when-target*
 
   ""
 
@@ -126,7 +127,7 @@
 
   (-when-requested-target target-request
                           (target &env)
-                          form+))
+                          form+)))
 
 
 ;;;;;;;;;; Testing file extensions
@@ -197,7 +198,7 @@
 
 
 
-(defmacro touch-recur*
+#?(:clj (defmacro touch-recur*
 
   ""
 
@@ -210,7 +211,7 @@
   ([path pred]
 
    (touch-recur path
-                (eval pred))))
+                (eval pred)))))
 
 
 ;;;;;;;;;; Anonymous macros
@@ -230,7 +231,7 @@
 
 
 
-(defmacro expand*
+#?(:clj (defmacro expand*
 
   ""
 
@@ -245,11 +246,11 @@
       `(eval ~form)
       (do
         (require (ns-name *ns*))
-        (eval form)))))
+        (eval form))))))
 
 
 
-(defmacro when-compiling*
+#?(:clj (defmacro when-compiling*
 
   ""
 
@@ -265,7 +266,7 @@
       form
       (do
         (require (ns-name *ns*))
-        (eval form)))))
+        (eval form))))))
 
 
 ;;;;;;;;;; Loading and expanding content from files
@@ -281,20 +282,20 @@
 
 
 
-(defmacro load-edn*
+#?(:clj (defmacro load-edn*
 
   ""
 
   [path]
 
-  `(quote ~(load-edn path)))
+  `(quote ~(load-edn path))))
 
 
 
-(defmacro load-string*
+#?(:clj (defmacro load-string*
 
   ""
 
   [path]
 
-  (slurp path))
+  (slurp path)))

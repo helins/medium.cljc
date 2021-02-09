@@ -45,14 +45,15 @@
 
 
 
+(def expand-test-var)
+
+
+
 (medium/expand*
   (let [x 1]
-
-    `(def expand-test-var
-
-       (+ ~x
-          expand-test-value))))
-
+    `(alter-var-root (var expand-test-var)
+                     (constantly ~(+ expand-test-value
+                                     x)))))
 
 
 (t/deftest expand*
