@@ -13,7 +13,4 @@
 ;;;;;;;;;;
 
 
-(println :user)
-
-
 (medium.dev/on-load)

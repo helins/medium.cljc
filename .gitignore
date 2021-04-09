@@ -1,39 +1,38 @@
-/target
-/classes
-/checkouts
-*.jar
+// Common
+
 *.class
-.cpcache
-/.lein-*
+*.jar
+.hg/
+.hgignore
+/.cpcache
 /.nrepl-history
 /.nrepl-port
-.hgignore
-.hg/
-.rebel_readline_history
-
-// For running kaocha-cljs
-
-.cljs_node_repl/
-node_modules/
-package-lock.json
-out
+/checkouts
+/classes
+/target
 
 
-// Shadow-cljs
+// Compilation
+
+compiled
+
+
+// CLJS utilities
 
 .cljs
+.cljs_node_repl/
 .shadow-cljs/
 node_modules/
 out
 package.json
-package-lock.json
-
-resources/*
-!resources/load.edn
-resources/public/*
-!resources/public/index.html
-resources/chui/*
-!resources/chui/index.html
 
 
-.clj-kondo/*
+// CLJS dev environment
+
+/cljs/*
+!/cljs/index.html
+
+
+// Wasmer
+
+./wasmer/runtime/*

@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 
-clj -M:dev"$@"
+clojure -X:jar

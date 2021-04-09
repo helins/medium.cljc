@@ -1,33 +1,41 @@
-{:deps
+{:aliases
+ {:cljs
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.11.23"}}
+   :main-opts  ["-m" "shadow.cljs.devtools.cli"]}
+
+  :deploy
+  {:exec-args  {:artifact  "compiled/jvm/release.jar"
+                :installer :remote}
+   :exec-fn    deps-deploy.deps-deploy/deploy
+   :extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}}
+
+  :dev
+  {:extra-paths ["src/dev"
+                 "src/test"]
+   :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}}}
+
+  :jar
+  {:exec-args    {:jar      "compiled/jvm/release.jar"
+                  :sync-pom true}
+   :exec-fn      hf.depstar/jar
+   :replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}}
+
+  :install
+  {:exec-args  {:artifact  "compiled/jvm/release.jar"
+                :installer :local}
+   :exec-fn    deps-deploy.deps-deploy/deploy
+   :extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}}
+
+  :kaocha
+  {:extra-deps {lambdaisland/kaocha {:mvn/version "1.0.829"}}}
+
+  :test
+  {:extra-paths ["src/test"]}}
+ 
+ :deps
  {com.taoensso/timbre         {:mvn/version "5.1.1"}
   hawk/hawk                   {:mvn/version "0.2.11"}
   org.clojure/tools.namespace {:mvn/version "1.1.0"}}
 
  :paths
- ["src/main"]
-
- :aliases
- {:cljs
-  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.9.10"}}
-   :main-opts  ["-m" "shadow.cljs.devtools.cli"]}
-
-  :deploy
-  {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
-   :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy" "release.jar"]}
-
-  :dev
-  {:extra-deps  {criterium/criterium {:mvn/version "0.4.5"}}
-   :extra-paths ["src/dev"]}
-
-  :jar
-  {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
-   :main-opts ["-m" "hf.depstar.jar" "release.jar"]}
-
-  :install
-  {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
-   :main-opts ["-m" "deps-deploy.deps-deploy" "install" "release.jar"]}
-
-  :test
-  {:extra-deps  {lambdaisland/chui   {:mvn/version "0.0.117"}
-                 lambdaisland/kaocha {:mvn/version "1.0-612"}}
-   :extra-paths ["src/test"]}}}
+ ["src/main"]}

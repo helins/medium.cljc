@@ -3,15 +3,15 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-(ns helins.medium-test
+(ns helins.medium.test
 
   ""
 
   {:author "Adam Helinski"}
 
   (:require [clojure.test  :as t]
-            [helins.medium :as medium])
-  #?(:cljs (:require-macros [helins.medium-test])))  ;; Just in case. In prior commits, this was ultimately throwing.
+            [helins.medium :as medium]))
+  ;#?(:cljs (:require-macros [helins.medium-test])))  ;; Just in case. In prior commits, this was ultimately throwing.
 
 
 ;;;;;;;;;;

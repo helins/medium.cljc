@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-rm -rf /home/adam/projects/clj/helins/medium/.shadow-cljs/builds/test
-clojure -M:test -m kaocha.runner "$@"

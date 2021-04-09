@@ -5,7 +5,8 @@
 
 (ns helins.medium.dev
 
-  ""
+  "When those dev namespaces are reloaded in CLJS, they should also get reloaded
+   from Clojure and print a message."
 
   {:author "Adam Helinski"}
 

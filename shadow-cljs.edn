@@ -7,21 +7,20 @@
                       :preloads   [shadow.remote.runtime.cljs.browser]}
    :modules          {:main {:entries [helins.medium.dev]
                              :init-fn helins.medium.dev/on-load}}
-   :output-dir       "resources/public/js"
+   :output-dir       "cljs/js"
    :target           :browser}
 
-
-  :test
-  {:target    :browser-test
-   :runner-ns lambdaisland.chui.shadow.browser-runner
-   :test-dir  "resources/chui"}}
+ :test-node
+ {:ns-regexp ".+"
+  :output-to "compiled/node/test.js"
+  :target    :node-test}}
 
  :deps
  {:alias [:cljs]}
  
  :dev-http
- {8000 "resources/public"}
+ {8000 "cljs"}
  
  :nrepl
- {:port 4000}
+ {:port 14563}
  }
