@@ -6,11 +6,11 @@
   <version>0.0.0-alpha0</version>
   <name>Medium</name>
   <description>Utilities for targeting different compilation environments in Clojure/script</description>
-  <url>https://github.com/helins-io/medium.cljc</url>
+  <url>https://github.com/helins/medium.cljc</url>
   <licenses>
     <license>
-      <name>Eclipse Public License</name>
-      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+      <name>Mozilla Public License Version 2.0</name>
+      <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
     </license>
   </licenses>
   <developers>
@@ -19,9 +19,9 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/helins-io/medium.cljc</url>
-    <connection>scm:git:git://github.com/helins-io/medium.cljc.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/helins-io/medium.cljc.git</developerConnection>
+    <url>https://github.com/helins/medium.cljc</url>
+    <connection>scm:git:git://github.com/helins/medium.cljc.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/helins/medium.cljc.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
   <dependencies>
