@@ -11,7 +11,19 @@
 
   (:require [clojure.test  :as t]
             [helins.medium :as medium]))
-  ;#?(:cljs (:require-macros [helins.medium-test])))  ;; Just in case. In prior commits, this was ultimately throwing.
+
+
+;;;;;;;;;;
+
+
+(def prop-target
+
+  ;;
+
+  (case (medium/expand* (System/getenv "HELINS_MEDIUM_TEST"))
+    "clojure"      :clojure
+    "cljs-dev"     :cljs/dev
+    "cljs-release" :cljs/release))
 
 
 ;;;;;;;;;;
@@ -20,10 +32,8 @@
 (t/deftest target
 
   (let [x (medium/target*)]
-    (t/is #?(:clj  (= :clojure
-                      x)
-             :cljs (#{:cljs/dev
-                      :cljs/release} x))
+    (t/is (= prop-target
+             x)
           "Current target is set accordingly")
 
     #?(:clj (t/is (= x

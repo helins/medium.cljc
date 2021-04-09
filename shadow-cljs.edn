@@ -11,9 +11,10 @@
    :target           :browser}
 
  :test-node
- {:ns-regexp ".+"
-  :output-to "compiled/node/test.js"
-  :target    :node-test}}
+ {:build-options {:cache-level :off}
+  :ns-regexp     ".+"
+  :output-to     "compiled/node/test.js"
+  :target        :node-test}}
 
  :deps
  {:alias [:cljs]}

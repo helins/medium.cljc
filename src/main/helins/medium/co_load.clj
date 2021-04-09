@@ -299,19 +299,4 @@
 
   [x]
 
-  (println :plugin-hook x))
-
-
-
-
-(comment
-
-
-  (-> -*state
-      deref
-      :tracker
-      deref
-      :clojure.tools.namespace.track/unload)
-
-
-  )
+  (println :plugin-hook-test x))
