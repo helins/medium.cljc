@@ -96,9 +96,26 @@
 ;;;;;;;;;; Simplifying outputting code depending on target
 
 
-#?(:clj (defn not-cljs-release
+#?(:clj (defn ^:no-doc -forbidden-form
 
-  "Given a macro's `&env` and `&form`, throws if the [[target]] is `:cljs/release`.
+  ;; Returns an `ex-info` notifying about access to a feature forbidden in Clojurescript release.
+  ;;
+  ;; Used by [[not-cljs-release*]].
+
+  [form]
+
+  (ex-info (str "Call forbidden in CLJS advanced build: "
+                form)
+           {:medium/forbidden (symbol (resolve (first form)))
+            :medium/form      form})))
+
+
+
+#?(:clj (defmacro not-cljs-release*
+
+  "**Must be used within a macro.**
+  
+   Given a macro's `&env` and `&form`, throws if the [[target]] is `:cljs/release`.
   
    Useful for forbidding specific features outside of development.
   
@@ -109,14 +126,11 @@
    | :medium/forbidden | The first symbol extracted from the given form |
    | :medium/form | The given form |"
 
-  [env form]
+  []
 
-  (when (identical? (target env)
-                    :cljs/release)
-    (throw (ex-info (str "Call forbidden in CLJS advanced build: "
-                         form)
-                    {:medium/forbidden (symbol (resolve (first form)))
-                     :medium/form      form})))))
+  `(when (identical? (target ~'&env)
+                     :cljs/release)
+     (throw (-forbidden-form ~'&form)))))
 
 
 

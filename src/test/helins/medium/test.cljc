@@ -10,10 +10,12 @@
   {:author "Adam Helinski"}
 
   (:require [clojure.test  :as t]
-            [helins.medium :as medium]))
+            [helins.medium :as medium])
+  #?(:cljs (:require-macros [helins.medium.test :refer [-not-cljs-release*]])))
 
 
 ;;;;;;;;;;
+
 
 
 (def prop-target
@@ -42,6 +44,32 @@
 
 
 ;;;;;;;;;;
+
+
+(defmacro -not-cljs-release*
+
+  ;; `prop-target` is accessible from Clojure (in this macro) when compiling CLJS
+  ;; test because of `:require-macros`.
+
+  []
+
+  (if (= prop-target
+         :cljs/release)
+    (try
+      (medium/not-cljs-release*)
+      false
+      (catch Throwable _e
+        true))
+    (do
+      (medium/not-cljs-release*)
+      true)))
+
+
+
+(t/deftest not-cljs-release*
+
+  (t/is (-not-cljs-release*)))
+
 
 
 (t/deftest when-target*
