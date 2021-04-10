@@ -5,29 +5,14 @@
 
 (ns helins.medium.dev
 
-  "When those dev namespaces are reloaded in CLJS, they should also get reloaded
-   from Clojure and print a message."
+  "For daydreaming at the REPL."
 
   {:author "Adam Helinski"}
 
-  (:require [helins.medium         :as medium]
-            [helins.medium.dev-2]))
+  (:require [helins.medium :as medium]))
 
 
 ;;;;;;;;;;
-
-
-#?(:clj (println :reload (str *ns*)))
-
-
-(defn on-load
-
-  "Gets called once from Clojure at initialization and everytime CLJS reloads."
-
-  []
-
-  )
-
 
 
 (comment
