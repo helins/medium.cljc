@@ -173,8 +173,8 @@
   "Also known as an \"anonymous macro\".
   
    Whether in Clojure JVM or during Clojurescript compilation, the given forms
-   are executed as Clojure JVM and the returned value is expanded just like in
-   a macro.
+   are executed as Clojure JVM and the returned value is expanded just like when
+   using a macro.
 
    See README for a full example."
 
