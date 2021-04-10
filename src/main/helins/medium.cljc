@@ -5,7 +5,13 @@
 
 (ns helins.medium
 
-  ""
+  "Either about:
+  
+   - Targeting a specific platform (Clojure JVM, Clojurescript dev, or Clojurescript
+   release)
+   - Transcending those platforms
+  
+   See README for examples."
 
   {:author "Adam Helinski"}
 
@@ -21,7 +27,7 @@
 
 #?(:clj (defonce ^:private -*cljs-mode
 
-  ;;
+  ;; Holds the CLJS target when environment is CLJS.
 
   (atom nil)))
 
@@ -29,7 +35,11 @@
 
 #?(:clj (defn target
 
-  ""
+  "Passing a macro's `&env`, determines the target:
+  
+   - `:clojure`
+   - `:cljs/dev`
+   - `:cljs/release`"
 
   [env]
 
@@ -51,19 +61,19 @@
 
 #?(:clj (defmacro target*
 
-  ""
+  "Calls [[target]]. Meant to be used at the REPL, from Clojure/script."
 
   []
 
   (target &env)))
 
 
-;;;;;
+;;;;; Testing targets
 
 
 (defn cljs?
 
-  ""
+  "Is the [[target]] referring to Clojurescript? (Either `:cljs/dev` or `:cljs/release`)."
 
   [target]
 
@@ -75,7 +85,7 @@
 
 (defn clojure?
 
-  ""
+  "Is the [[target]] referring to `:clojure`?"
 
   [target]
 
@@ -83,12 +93,21 @@
      :clojure))
 
 
-;;;;;;;;;; Macros simplifying outputting code depending on target
+;;;;;;;;;; Simplifying outputting code depending on target
 
 
 #?(:clj (defn not-cljs-release
 
-  ""
+  "Given a macro's `&env` and `&form`, throws if the [[target]] is `:cljs/release`.
+  
+   Useful for forbidding specific features outside of development.
+  
+   Thrown exception is an `ex-info` with a data map containing:
+
+   | Keyword | Meaning |
+   |---|---|
+   | :medium/forbidden | The first symbol extracted from the given form |
+   | :medium/form | The given form |"
 
   [env form]
 
@@ -101,31 +120,21 @@
 
 
 
-#?(:clj (defn- -when-requested-target
-
-  ""
-
-  [target-request target form+]
-
-  (when (if (coll? target-request)
-          (some #(identical? %
-                             target)
-                target-request)
-          (identical? target
-                      target-request))
-    `(do ~@form+))))
-
-
-
 #?(:clj (defmacro when-target*
 
-  ""
+  "Akin to the standard `when` macro, executes the given forms when the [[target]] matches
+   `target-request` (either a [[target]] or a collection of them for matching any)."
 
   [target-request & form+]
 
-  (-when-requested-target target-request
-                          (target &env)
-                          form+)))
+  (let [target' (target &env)]
+    (when (if (coll? target-request)
+            (some #(identical? %
+                               target')
+                  target-request)
+            (identical? target'
+                        target-request))
+      `(do ~@form+)))))
 
 
 ;;;;;;;;;; Anonymous macros
@@ -133,7 +142,7 @@
 
 #?(:clj (defn- -resolve-target
 
-  ;;
+  ;; In `form+`, resolves the special symbol '&target to the actual target.
 
   [target form+]
 
@@ -147,7 +156,13 @@
 
 #?(:clj (defmacro expand*
 
-  ""
+  "Also known as an \"anonymous macro\".
+  
+   Whether in Clojure JVM or during Clojurescript compilation, the given forms
+   are executed as Clojure JVM and the returned value is expanded just like in
+   a macro.
+
+   See README for a full example."
 
   [& clojure-form+]
 
@@ -166,7 +181,10 @@
 
 #?(:clj (defmacro when-compiling*
 
-  ""
+  "Similar to [[expand*]] but any returned value is discarded.
+  
+   Solely useful for any kind of side effect on the JVM regardless of the target
+   platform."
 
   [& clojure-form+]
 
