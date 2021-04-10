@@ -159,6 +159,13 @@ $ ./bin/dev/cljs
 ```
 
 
+## Prior work
+
+Deducing a compilation target from a macro's `&env'` has been notably used in
+the [Macrovitch library](https://github.com/cgrand/macrovich) which shares some
+features with this work, albeit the focus being different.
+
+
 ## License
 
 Copyright © 2021 Adam Helinski
