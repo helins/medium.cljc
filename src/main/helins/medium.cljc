@@ -9,18 +9,11 @@
 
   {:author "Adam Helinski"}
 
-  #?(:clj (:require [clojure.edn]
-                    [clojure.string]
-                    [clojure.walk]))
-  #?(:cljs (:require [clojure.string]))
+  #?(:clj (:require [clojure.walk]))
   #?(:cljs (:require-macros [helins.medium :refer [expand*
-                                                   load-edn*
-                                                   load-string*
                                                    target*
-                                                   touch-recur*
                                                    when-compiling*
-                                                   when-target*]]))
-  #?(:clj (:import java.io.File)))
+                                                   when-target*]])))
 
 
 ;;;;;;;;; Deducing the compilation target from a macro's &env
@@ -90,7 +83,7 @@
      :clojure))
 
 
-;;;;;;;;;; Macros simplify outputting code depending on target
+;;;;;;;;;; Macros simplifying outputting code depending on target
 
 
 #?(:clj (defn not-cljs-release
@@ -133,90 +126,6 @@
   (-when-requested-target target-request
                           (target &env)
                           form+)))
-
-
-;;;;;;;;;; Testing file extensions
-
-
-(defn file-cljc?
-
-  ""
-
-  [filename]
-
-  (clojure.string/ends-with? filename
-                             ".cljc"))
-
-
-
-(defn file-cljs?
-
-  ""
-
-  [filename]
-
-  (or (file-cljc? filename)
-      (clojure.string/ends-with? filename
-                                 ".cljs")))
-
-
-
-(defn file-clojure?
-
-  ""
-
-  [filename]
-
-  (or (file-cljc? filename)
-      (clojure.string/ends-with? filename
-                                 ".clj")))
-
-
-;;;;;;;;;; Touching files (mainly for forcing recompilation in watching compilers)
-
-
-#?(:clj (defn touch-recur
-
-  ""
-
-  ([path]
-
-   (touch-recur path
-                nil))
-
-
-  ([path pred]
-
-   (let [now    (System/currentTimeMillis)
-         pred-2 (or pred
-                    (fn [_]
-                      true))]
-     (into []
-           (comp (map (fn [^File file]
-                        (let [path (.getCanonicalPath file)]
-                          (when (pred-2 path)
-                            (.setLastModified file
-                                              now)
-                            path))))
-                 (filter some?))
-           (file-seq (File. path)))))))
-
-
-
-#?(:clj (defmacro touch-recur*
-
-  ""
-
-  ([path]
-
-   `(touch-recur* ~path
-                  nil))
-
-
-  ([path pred]
-
-   (touch-recur path
-                (eval pred)))))
 
 
 ;;;;;;;;;; Anonymous macros
@@ -272,35 +181,3 @@
       (do
         (require (ns-name *ns*))
         (eval form))))))
-
-
-;;;;;;;;;; Loading and expanding content from files
-
-
-#?(:clj (defn load-edn
-
-  ""
-
-  [path]
-
-  (clojure.edn/read-string (slurp path))))
-
-
-
-#?(:clj (defmacro load-edn*
-
-  ""
-
-  [path]
-
-  `(quote ~(load-edn path))))
-
-
-
-#?(:clj (defmacro load-string*
-
-  ""
-
-  [path]
-
-  (slurp path)))
