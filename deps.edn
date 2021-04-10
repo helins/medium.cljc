@@ -33,9 +33,7 @@
   {:extra-paths ["src/test"]}}
  
  :deps
- {com.taoensso/timbre         {:mvn/version "5.1.1"}
-  hawk/hawk                   {:mvn/version "0.2.11"}
-  org.clojure/tools.namespace {:mvn/version "1.1.0"}}
+ {}
 
  :paths
  ["src/main"]}
